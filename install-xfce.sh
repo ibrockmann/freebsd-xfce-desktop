@@ -260,30 +260,33 @@ do
 done
 }
 
+#croscorefonts
+#fira
+
 
 # ------------------------------------ x11-fonts-------------------------------
 install_fonts () {
 local FONTS
 # ------------------------------------ basic fonts ----------------------------
-#x11-fonts/bitstream-vera		#Supports fully hinting, which improves the display on computer monitors.
-#x11-fonts/cantarell-fonts   	#Cantarell, a Humanist sans-serif font family
-##x11-fonts/dejavu		  		#will be installed with xorg
-#x11-fonts/droid-fonts-ttf 		#System fonts for Android platform
-#x11-fonts/noto					#Google Noto Fonts family (meta port)
-#x11-fonts/urwfonts				#URW font collection for X
-#x11-fonts/ubuntu-font			#Ubuntu font family
-#x11-fonts/webfonts				#TrueType core fonts for the Web
-#x11-fonts/liberation-fonts-ttf #Liberation fonts from Red Hat to replace MS TTF fonts
+#x11-fonts/bitstream-vera			#Supports fully hinting, which improves the display on computer monitors.
+#x11-fonts/cantarell-fonts			#Cantarell, a Humanist sans-serif font family
+#x11-fonts/croscorefonts-fonts-ttf	#Google font for ChromeOS to replace MS TTF
+##x11-fonts/dejavu					#will be installed with xorg
+#x11-fonts/noto						#Google Noto Fonts family (meta port)
+#x11-fonts/urwfonts					#URW font collection for X
+#x11-fonts/webfonts					#TrueType core fonts for the Web
+#x11-fonts/liberation-fonts-ttf 	#Liberation fonts from Red Hat to replace MS TTF fonts
 
 
 # ------------------------------------ terminal & editor fonts-----------------
 #x11-fonts/anonymous-pro		#Fixed width sans designed especially for coders
+#x11-fonts/firacode				#Monospaced font with programming ligatures derived from Fira
 #x11-hack/hack-font				#Monospaced font designed to be a workhorse typeface for code
-#x11-fonts/sourcecodepro-ttf 	#Set of fonts by Adobe designed for coders
-#x11-fonts/terminus-font		#Terminus Font is designed for long (8 and more hours per day) work with computers
-#x11-fonts/Inconsolata-LGC		#Attractive font for programming
+#x11-fonts/inconsolata-ttf		#Attractive font for programming
+#x11-fonts/sourcecodepro-ttf	#Set of fonts by Adobe designed for coders
 
-FONTS="anonymous-pro bitstream-vera cantarell-fonts droid-fonts-ttf hack-font noto sourcecodepro-ttf terminus-font urwfonts ubuntu-font webfonts liberation-fonts-ttf Inconsolata-LGC"
+
+FONTS="anonymous-pro bitstream-vera cantarell-fonts croscorefonts firacode hack-font inconsolata-ttf liberation-fonts-ttf noto sourcecodepro-ttf urwfonts webfonts"
 for font in  $FONTS; do
 	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing font: ${COLOR_CYAN}$font${COLOR_NC}\n"
 	install_packages $font
@@ -577,7 +580,7 @@ set_lightdm_greeter () {
 	local BACKGROUND="/usr/local/share/backgrounds/FreeBSD-lockscreen_v2-blue.png"
 	local USER_BACKGROUND="false"
 	local THEME="Matcha-sea"
-	local FONT="Ubuntu Bold 11"
+	local FONT="Cantarell Bold 12"
 	local INDICATORS="~host;~spacer;~clock;~spacer;~session;~a11y;~language;~power"
 	local CLOCK="%A, %d. %B %Y     %H:%M"
 	local POSITION="25%,center 45%,center"
@@ -682,6 +685,7 @@ set_lightdm_greeter () {
 		
 				
 		# ----------- user curl instead of fetch ------------------------------
+		pkg install curl
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v1-blue.png${COLOR_NC} from gitgub...\n"
 		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-blue.png
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v1-red.png${COLOR_NC} from gitgub...\n"
