@@ -279,11 +279,11 @@ local FONTS
 
 
 # ------------------------------------ terminal & editor fonts-----------------
-#x11-fonts/anonymous-pro		#Fixed width sans designed especially for coders
-#x11-fonts/firacode				#Monospaced font with programming ligatures derived from Fira
-#x11-hack/hack-font				#Monospaced font designed to be a workhorse typeface for code
-#x11-fonts/inconsolata-ttf		#Attractive font for programming
-#x11-fonts/sourcecodepro-ttf	#Set of fonts by Adobe designed for coders
+#x11-fonts/anonymous-pro			#Fixed width sans designed especially for coders
+#x11-fonts/firacode					#Monospaced font with programming ligatures derived from Fira
+#x11-hack/hack-font					#Monospaced font designed to be a workhorse typeface for code
+#x11-fonts/inconsolata-ttf			#Attractive font for programming
+#x11-fonts/sourcecodepro-ttf		#Set of fonts by Adobe designed for coders
 
 
 FONTS="anonymous-pro bitstream-vera cantarell-fonts croscorefonts firacode hack-font inconsolata-ttf liberation-fonts-ttf noto sourcecodepro-ttf urwfonts webfonts"
@@ -422,10 +422,11 @@ INSTALL_SHOTWELL=$?
 
 
 #  ----------------------------------- office & mail --------------------------
-yes_no "Install LibreOffice and Mailsprint (LibreOffice, Thunderbird, CUPS, SANE)?"
+yes_no "Install LibreOffice and Thunderbird (LibreOffice, Thunderbird, CUPS, SANE)?"
 INSTALL_OFFICE=$?
 INSTALL_MAIL=$?
-INSTALL_CUPS=$?
+# -------------------------------- printing -----------------------------------
+INSTALL_CUPS=$?				# CUPS is a standards-based, open source printing system
 INSTALL_SANE=$?
 
 
@@ -776,9 +777,6 @@ install_office () {
 }
 install_office
 
-#INSTALL_CUPS=$?
-#INSTALL_SANE$?
-
 
 install_mail () {
 	if [ "$INSTALL_MAIL" -eq 0 ]; then
@@ -826,6 +824,15 @@ install_utilities () {
 
 }
 install_utilities
+
+
+# -------------------------------- printing, only network printer -----------------------------------
+	if [ "$INSTALL_CUPS" -eq 0 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Common UNIX Printing System (CUPS)${COLOR_NC}...\n"
+		install_packages cups
+		sysrc cupsd_enable="YES"			#enable cups
+		pw usermod root -G cups
+	fi
 
 
 # ------------------------------------ Reboot FreeBSD --------------------------
