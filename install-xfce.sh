@@ -253,7 +253,7 @@ install_packages() {
 for PACKAGENAME in $*
 do
 		if pkg search -L name $PACKAGENAME | cut -w -f1 | grep -x -q $PACKAGENAME; then #Check if FreeBSd package vorhanden
-		pkg install -y $PACKAGENAME	
+			pkg install -y $PACKAGENAME
 		else
 			printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] pkg: No packages available to install matching ${COLOR_CYAN}"$PACKAGENAME"${COLOR_NC}!\n"
 	fi
@@ -422,12 +422,11 @@ INSTALL_SHOTWELL=$?
 
 
 #  ----------------------------------- office & mail --------------------------
-yes_no "Install LibreOffice and Thunderbird (LibreOffice, Thunderbird, CUPS, SANE)?"
+yes_no "Install LibreOffice and Thunderbird (LibreOffice, Thunderbird, CUPS)?"
 INSTALL_OFFICE=$?
 INSTALL_MAIL=$?
 # -------------------------------- printing -----------------------------------
 INSTALL_CUPS=$?				# CUPS is a standards-based, open source printing system
-INSTALL_SANE=$?
 
 
 #  ----------------------------------- security -------------------------------
@@ -787,6 +786,15 @@ install_mail () {
 install_mail
 
 
+# -------------------------------- printing, only network printer -----------------------------------
+	if [ "$INSTALL_CUPS" -eq 0 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Common UNIX Printing System (CUPS)${COLOR_NC}...\n"
+		install_packages cups
+		sysrc cupsd_enable="YES"
+		pw usermod root -G cups
+	fi
+
+
 install_keepass () {
 	if [ "$INSTALL_KEEPASS" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Keepass${COLOR_NC}...\n"
@@ -826,18 +834,23 @@ install_utilities () {
 install_utilities
 
 
-# -------------------------------- printing, only network printer -----------------------------------
-	if [ "$INSTALL_CUPS" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Common UNIX Printing System (CUPS)${COLOR_NC}...\n"
-		install_packages cups
-		sysrc cupsd_enable="YES"			#enable cups
-		pw usermod root -G cups
-	fi
+
+# ------------------------------------ boot silent ------------------------------
+
+sysrc -f /boot/loader.conf autoboot_delay=3
+sysrc -f /boot/loader.conf boot_mute="YES"
+#sysrc -f /boot/loader.conf beastie_disable=YES
+
+# for troubleshooting issues, most boot messages can be found under:
+# dmesg 
+# (cat|tail|grep|less|more..) /var/log/messages
+
+sysrc rc_startmsgs="NO"
 
 
-# ------------------------------------ Reboot FreeBSD --------------------------
+
+# ------------------------------------ reboot FreeBSD --------------------------
 ## -----------------------------------------------------------------------------
-
 printf "\n[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  ${COLOR_CYAN}Update is completed. Please reboot FreeBSD!${COLOR_NC}\n"
 if !(yes_no "Reboot FreeBSD now?" NO); then
 	printf "\n[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  Installation is completed - System must be rebooted!\n"
