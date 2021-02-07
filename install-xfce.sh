@@ -2,7 +2,7 @@
 
 #============================================================================
 # Install Xfce 4.16 Desktop on FreeBSD 12.2
-# by ibrockmann, Version: 2021-01-22
+# by ibrockmann, Version: 2021-02-06
 # 
 # Notes: Installation of Xfce 4.16 Desktop Environment with Matcha and 
 #  Arc GTK Themes on FreeBSD 12.2
@@ -10,7 +10,7 @@
 # Display driver: Script supports onyl current nvidia (440.xx series) and VMware
 #  display driver
 # When using VMware, Screen size variable muste be set to your needs.
-# Default: 1280x1024
+# Default: 2560x1440
 #
 # Applications: Audacious, Catfish, Chromium, Gimp, htop, KeePass, LibreOffice,
 # mpv, neofetch, OctoPkg, Ristretto, Shotweel, sysinfo, Thunderbird, VIM, VLC
@@ -260,10 +260,6 @@ do
 done
 }
 
-#croscorefonts
-#fira
-
-
 # ------------------------------------ x11-fonts-------------------------------
 install_fonts () {
 local FONTS
@@ -366,6 +362,25 @@ patch_lockscreen_theme () {
         printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
    fi
 }
+
+# ---------- fetch wallpaper wallpaper for Xfce --------------- 
+fetch_wallpaper () {
+	
+	# Variables
+	local DIR="/usr/local/share/backgrounds/"				# Xfce background folder
+	if [ -d $DIR ]; then
+		cd /usr/local/share/backgrounds/
+			
+		# ------------ fetch does not work in privat github repository --------
+		#fetch --no-verify-peer https://github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mountain_1920x1080.jpg
+	
+		# ----------- user curl instead of fetch ------------------------------
+		pkg install curl
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/Mountain_1920x1080.jpg${COLOR_NC} from gitgub...\n"
+		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@https://github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mountain_1920x1080.jpg
+	else
+		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
+	fi	
 
 
 ## ----------------------------------------------------------------------------
@@ -572,6 +587,9 @@ set_skel_template () {
 }
 set_skel_template
 
+
+
+
 # ----------------------- Config and tweaks for lightdm ---------------------------
 set_lightdm_greeter () {
 
@@ -685,7 +703,6 @@ set_lightdm_greeter () {
 		
 				
 		# ----------- user curl instead of fetch ------------------------------
-		pkg install curl
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v1-blue.png${COLOR_NC} from gitgub...\n"
 		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-blue.png
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v1-red.png${COLOR_NC} from gitgub...\n"
@@ -706,6 +723,8 @@ set_lightdm_greeter () {
 	fi	
 }
 set_lightdm_greeter
+
+
 
 
 # ------------------------------ install applications--------------------------
@@ -834,18 +853,16 @@ install_utilities () {
 install_utilities
 
 
+# ------------------------------------ silence the boot messages ------------------------------
 
-# ------------------------------------ boot silent ------------------------------
+sysrc -f /boot/loader.conf autoboot_delay="3" 		# Delay in seconds before autobooting
+sysrc -f /boot/loader.conf boot_mute="YES"			# Mute the content
+#sysrc -f /boot/loader.conf beastie_disable="YES"	# Turn the beastie boot menu on and off
 
-sysrc -f /boot/loader.conf autoboot_delay=3
-sysrc -f /boot/loader.conf boot_mute="YES"
-#sysrc -f /boot/loader.conf beastie_disable=YES
-
-# for troubleshooting issues, most boot messages can be found under:
-# dmesg 
-# (cat|tail|grep|less|more..) /var/log/messages
-
-sysrc rc_startmsgs="NO"
+													# rc_startmsgs
+sysrc rc_startmsgs="NO"								# for troubleshooting issues, most boot messages can be found under:
+													# dmesg 
+													# (cat|tail|grep|less|more..) /var/log/messages
 
 
 
