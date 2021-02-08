@@ -377,11 +377,11 @@ fetch_wallpaper () {
 		# ----------- user curl instead of fetch ------------------------------
 		pkg install curl
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/Mountain_1920x1080.jpg${COLOR_NC} from gitgub...\n"
-		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@https://github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mountain_1920x1080.jpg
+		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mountain_1920x1080.jpg
 	else
 		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
 	fi	
-
+}
 
 ## ----------------------------------------------------------------------------
 ## ----------------------------------- Main -----------------------------------
@@ -567,6 +567,8 @@ printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/etc/rc.conf${C
 # xfce uses D-Bus for a message bus and must ve enable it in /etc/rc.conf so it will be started when the system boots
 sysrc dbus_enable="YES"
 
+# ---------- fetch wallpaper wallpaper for Xfce --------------- 
+fetch_wallpaper
 
 # ----------------------- Setup Users and Desktop Environment -----------------
 # -----------------------------------------------------------------------------
