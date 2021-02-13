@@ -39,10 +39,12 @@ SCREEN_SIZE='2560x1440'			 # Only required if VMWare is used.
 # ---- 0 - utility will be installed ---- 1 - utility will NOT be installed --
 
 INSTALL_CATFISH=0				# Catfish is a GTK based search utility
-INSTALL_OCTOPKG=0				# Graphical front-end to the FreeBSD pkg-ng package manager
-INSTALL_NEOFETCH=0				# Fast, highly customizable system info script
-INSTALL_SYSINFO=0				# Utility used to gather system configuration information
 INSTALL_HTOP=0					# Better top - interactive process viewer
+INSTALL_FILE_ROLLER=0			# GNOME Archive manager (file-roller) for zip files, tar, etc
+INSTALL_NEOFETCH=0				# Fast, highly customizable system info script
+INSTALL_OCTOPKG=0				# Graphical front-end to the FreeBSD pkg-ng package manager
+INSTALL_SYSINFO=0				# Utility used to gather system configuration information
+
 
 
 # -----------------------------------------------------------------------------
@@ -268,7 +270,8 @@ local FONTS
 #x11-fonts/cantarell-fonts			#Cantarell, a Humanist sans-serif font family
 #x11-fonts/croscorefonts-fonts-ttf	#Google font for ChromeOS to replace MS TTF
 ##x11-fonts/dejavu					#will be installed with xorg
-#x11-fonts/noto						#Google Noto Fonts family (meta port)
+#x11-fonts/noto-basic				#Google Noto Fonts family (Basic)
+#x11-fonts/noto-emoji				#Google Noto Fonts family (Emoji)
 #x11-fonts/urwfonts					#URW font collection for X
 #x11-fonts/webfonts					#TrueType core fonts for the Web
 #x11-fonts/liberation-fonts-ttf 	#Liberation fonts from Red Hat to replace MS TTF fonts
@@ -282,7 +285,7 @@ local FONTS
 #x11-fonts/sourcecodepro-ttf		#Set of fonts by Adobe designed for coders
 
 
-FONTS="anonymous-pro bitstream-vera cantarell-fonts croscorefonts firacode hack-font inconsolata-ttf liberation-fonts-ttf noto sourcecodepro-ttf urwfonts webfonts"
+FONTS="anonymous-pro bitstream-vera cantarell-fonts croscorefonts firacode hack-font inconsolata-ttf liberation-fonts-ttf noto-basic noto-emoji sourcecodepro-ttf urwfonts webfonts"
 for font in  $FONTS; do
 	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing font: ${COLOR_CYAN}$font${COLOR_NC}\n"
 	install_packages $font
@@ -831,24 +834,32 @@ install_utilities () {
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Catfish${COLOR_NC}...\n"
 		install_packages catfish
 	fi
-	if [ "$INSTALL_OCTOPKG" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}OctpPkg${COLOR_NC}...\n"
-		install_packages octopkg
+	
+	if [ "$INSTALL_FILE_ROLLER" -eq 0 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Archive manager for zip files, tar, etc${COLOR_NC}...\n"
+		install_packages file-roller
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Thunar Archive Plugin${COLOR_NC}...\n"
+		install_packages thunar-archive-plugin
+	fi
+		
+	if [ "$INSTALL_HTOP" -eq 0 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Htop${COLOR_NC}...\n"
+		install_packages htop
 	fi
 	
 	if [ "$INSTALL_NEOFETCH" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Neofetch${COLOR_NC}...\n"
 		install_packages neofetch
 	fi
-
+	
+	if [ "$INSTALL_OCTOPKG" -eq 0 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}OctpPkg${COLOR_NC}...\n"
+		install_packages octopkg
+	fi
+	
 	if [ "$INSTALL_SYSINFO" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Sysinfo${COLOR_NC}...\n"
 		install_packages sysinfo
-	fi
-
-	if [ "$INSTALL_HTOP" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Htop${COLOR_NC}...\n"
-		install_packages htop
 	fi
 
 }
@@ -857,12 +868,12 @@ install_utilities
 
 # ------------------------------------ silence the boot messages ------------------------------
 
-sysrc -f /boot/loader.conf autoboot_delay="3" 		# Delay in seconds before autobooting
-sysrc -f /boot/loader.conf boot_mute="YES"			# Mute the content
+#sysrc -f /boot/loader.conf autoboot_delay="3" 		# Delay in seconds before autobooting
+#sysrc -f /boot/loader.conf boot_mute="YES"			# Mute the content
 #sysrc -f /boot/loader.conf beastie_disable="YES"	# Turn the beastie boot menu on and off
 
 													# rc_startmsgs
-sysrc rc_startmsgs="NO"								# for troubleshooting issues, most boot messages can be found under:
+#sysrc rc_startmsgs="NO"							# for troubleshooting issues, most boot messages can be found under:
 													# dmesg 
 													# (cat|tail|grep|less|more..) /var/log/messages
 
