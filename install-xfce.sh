@@ -375,12 +375,12 @@ fetch_wallpaper () {
 		cd /usr/local/share/backgrounds/
 			
 		# ------------ fetch does not work in privat github repository --------
-		#fetch --no-verify-peer https://github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mountain_1920x1080.jpg
+		#fetch --no-verify-peer https://github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mount_Fitz_Roy_1920x1080.jpg
 	
 		# ----------- user curl instead of fetch ------------------------------
 		pkg install curl
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/Mountain_1920x1080.jpg${COLOR_NC} from gitgub...\n"
-		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mountain_1920x1080.jpg
+		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mount_Fitz_Roy_1920x1080.jpg
 	else
 		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
 	fi	
@@ -870,7 +870,6 @@ install_utilities
 
 #sysrc -f /boot/loader.conf autoboot_delay="3" 		# Delay in seconds before autobooting
 #sysrc -f /boot/loader.conf boot_mute="YES"			# Mute the content
-#sysrc -f /boot/loader.conf beastie_disable="YES"	# Turn the beastie boot menu on and off
 
 													# rc_startmsgs
 #sysrc rc_startmsgs="NO"							# for troubleshooting issues, most boot messages can be found under:
