@@ -548,9 +548,15 @@ install_packages xdg-user-dirs
 
 
 # ------------------------------------ install xfce panel plugins -------------
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Whiskermenu${COLOR_NC} for Xfce Desktop Environment.\n"
+printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Whiskermenu${COLOR_NC} for Xfce Desktop Environment...\n"
 # pkg install -y xfce4-whiskermenu-plugin
 install_packages xfce4-whiskermenu-plugin
+		
+printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Thunar Archive Plugin${COLOR_NC}...\n"
+install_packages thunar-archive-plugin
+
+printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Weather plugin for the Xfce panel${COLOR_NC}...\n"
+install_packages xfce4-weather-plugin
 
 
 # ------------------------------------ install Matcha and Arc themes ---------
@@ -838,8 +844,6 @@ install_utilities () {
 	if [ "$INSTALL_FILE_ROLLER" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Archive manager for zip files, tar, etc${COLOR_NC}...\n"
 		install_packages file-roller
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Thunar Archive Plugin${COLOR_NC}...\n"
-		install_packages thunar-archive-plugin
 	fi
 		
 	if [ "$INSTALL_HTOP" -eq 0 ]; then
