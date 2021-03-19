@@ -192,7 +192,6 @@ yes_no () {
 }
 
 
-
 # ------------------------------------- add login class user accounts ---
 add_login_class () {
 	local rc=0
@@ -599,8 +598,6 @@ set_skel_template () {
 set_skel_template
 
 
-
-
 # ----------------------- Config and tweaks for lightdm ---------------------------
 set_lightdm_greeter () {
 
@@ -784,7 +781,6 @@ install_multimedia () {
 		install_packages ristretto 
 	fi
 
-
 	if [ "$INSTALL_SHOTWELL" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Shotwell${COLOR_NC}...\n"
 		install_packages shotwell
@@ -870,15 +866,119 @@ install_utilities () {
 install_utilities
 
 
-# ------------------------------------ silence the boot messages ------------------------------
+# -----------------------------------------------------------------------------
+# ----------------------- Post installation tasks -----------------------------
 
-#sysrc -f /boot/loader.conf autoboot_delay="3" 		# Delay in seconds before autobooting
+# --------------------------- FreeBSD update ----------------------------------
+add_crontab () {
+	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Add crontab file to check for updates daily...\n"
+	echo "# /etc/cron.d/system_update - crontab file to automatically check for updates daily
+#
+#
+SHELL=/bin/sh
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+## Daily check for FreeBSd updates and packages
+## minute (0-59) or interval,
+# |     hour (0-23),
+# |     |       day of the month (1-31),
+# |     |       |       month of the year (1-12),
+# |     |       |       |       day of the week (0-6 with 0=Sunday).
+# |     |       |       |       |    who   commands
+#
+
+@daily	root	freebsd-update cron
+@daily 	root	pkg update -f > /dev/null && pkg version -vURL="  > /etc/cron.d/system_update
+
+chmod 640 /etc/cron.d/system_update
+}
+add_crontab
+
+
+# --------------------------- silence the boot messages -----------------------
+silence_boot_messages () {
+printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Keepass${COLOR_NC}...\n"
+sysrc -f /boot/loader.conf autoboot_delay="5" 		# Delay in seconds before autobooting
 #sysrc -f /boot/loader.conf boot_mute="YES"			# Mute the content
 
 													# rc_startmsgs
 #sysrc rc_startmsgs="NO"							# for troubleshooting issues, most boot messages can be found under:
 													# dmesg 
 													# (cat|tail|grep|less|more..) /var/log/messages
+}
+silence_boot_messages 
+
+
+# -------------------------------------- Firewall -----------------------------
+enable_ipfw_firewall () {
+printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Enable the predefined ipfw firewall...\n"
+# Enable the predefined ipfw firewall: 
+sysrc firewall_enable="YES" 
+sysrc firewall_quiet="YES" 				# suppress rule display
+sysrc firewall_type="workstation"		# protects only this machine using stateful rules
+#sysrc firewall_myservices="22/tcp"
+#sysrc firewall_allowservices="192.168.178.0/24"
+
+# log denied packets to /var/log/security
+sysrc firewall_logdeny="YES"
+}
+enable_ipfw_firewall
+
+# -------------------------- Security hardening -------------------------------
+# ------- FreeBSD hardening optenios (already offers during installation) -----
+
+system_hardening () {
+
+    FILE="/etc/sysctl.conf"
+
+	if [ -f $FILE ]; then   # /etc/sysctl.conf exists?
+        # System security hardening options
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set system security hardening options in ${COLOR_CYAN}${FILE}${COLOR_NC}...\n"
+            
+		# use delimiter ':' instead of '/'
+        sed -i .bak -e "s:^security.bsd.see_other_gids=.*:security.bsd.see_other_gids=0:" 					  \	 # Hide processes running as other users
+                    -e "s:^security.bsd.see_other_uids=.*:security.bsd.see_other_uids=0:"  					  \	 # Hide processes running as other groups 
+                    -e "s:^security.bsd.see_jail_proc=.*:security.bsd.see_jail_proc=0:"                       \	 # Hide processes running in jails
+                    -e "s:^security.bsd.unprivileged_read_msgbuf=.*:security.bsd.unprivileged_read_msgbuf=0:" \	 # Disable reading kernel message buffer for unprivileged users
+                    -e "s:^security.bsd.unprivileged_proc_debug=.*:security.bsd.unprivileged_proc_debug=0:"   \  # Disable process debugging facilities for unprivileged users
+					-e "s:^security.bsd.stack_guard_page=.*:security.bsd.stack_guard_page=1:"				  \	 # Additional stack protection, specifies the number of guard pages for a stack that grows	
+                    -e "s:^kern.randompid=.*:kern.randompid=1:" $FILE											 # Randomize the PID of newly created processes
+	
+	# append system hardening parameter at EOF, if parameter not exists 
+	grep -q '^security.bsd.see_other_gids=' $FILE 			|| echo 'security.bsd.see_other_gids=0' 			>> $FILE
+	grep -q '^security.bsd.see_other_uids=' $FILE 			|| echo 'security.bsd.see_other_uids=0' 			>> $FILE
+	grep -q '^security.bsd.see_jail_proc=' $FILE 			|| echo 'security.bsd.see_jail_proc=0' 				>> $FILE
+	grep -q '^security.bsd.unprivileged_read_msgbuf=' $FILE	|| echo 'security.bsd.unprivileged_read_msgbuf=0' 	>> $FILE
+	grep -q '^security.bsd.unprivileged_proc_debug=' $FILE 	|| echo 'security.bsd.unprivileged_proc_debug=0'	>> $FILE
+	grep -q '^security.bsd.stack_guard_page=' $FILE 		|| echo 'security.bsd.stack_guard_page=1'			>> $FILE
+	grep -q '^kern.randompid=' $FILE 						|| echo 'kern.randompid=1' 							>> $FILE
+	
+    else
+        printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
+    fi
+
+	rm ${FILE}.bak # delete backup file
+   
+	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Clean the ${COLOR_CYAN}/tmp ${COLOR_NC}filesystem on system startup...\n"
+	sysrc clear_tmp_enable="YES"	# Clean the /tmp filesystem on system startup
+	
+	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Disable opening Syslogd network socket (disables remote logging)...\n"
+	sysrc syslogd_flags="-ss"		# Disable opening Syslogd network socket (disables remote logging)
+	
+	# Disable sendmail service
+	#printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Disable sendmail service)...\n"
+	#sysrc sendmail_enable="NONE"
+}
+system_hardening
+
+
+# 
+# unprivileged users are not permitted to create hard links to files not owned by them or if they are not member of file's group
+# This setting could impact on programs like Poudriere! 
+#security.bsd.hardlink_check_uid=1
+#security.bsd.hardlink_check_gid=1
+
+
+
 
 
 
