@@ -134,6 +134,23 @@ freebsd_update () {
 	# fi
 }
 
+# ------------------------------------ set umask ----------------------------
+set_umask () {
+	FILE="/etc/login.conf"
+	if [ -f $FILE ]; then # login.conf exists?
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set ${COLOR_CYAN}umask=027${COLOR_NC} as default umask...\n"
+			
+		# sed script to change ":umask=022:" to ":umask=027:" only on the first occurrence
+		sed -i .bak -e '1{x;s/^/first/;x;}' \
+			-e '1,/:umask=022:/{x;/first/s///;x;s/:umask=022:/:umask=027:/;}'  $FILE
+		
+		cap_mkdb $FILE
+		rm ${FILE}.bak # Delete backup file
+	else
+        printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
+    fi
+}
+
 
 # ------------------------------------ pkg activation status check ----------------------------
 check_pkg_activation () {
@@ -246,7 +263,6 @@ set_login_class_all () {
 	 return 1
 	fi
 }
-
 
 
 # ------------------------------------ install a package from the reposity catalogues ----
@@ -393,8 +409,10 @@ check_if_root
 display_system_info
 check_network
 check_pkg_activation
+set_umask
 freebsd_update
 install_pkg
+
 # -------------------------------- Switching from quarterly to latest?  ------   
 if (yes_no "\nSwitch from ${COLOR_CYAN}quarterly${COLOR_NC} to the ${COLOR_CYAN}latest${COLOR_NC} repository (use latest versions of FreeBSD packages)? " NO); then
 	switch_to_latest_repository
@@ -676,11 +694,10 @@ set_lightdm_greeter () {
                     -e "s:#screensaver-timeout=.*:#screensaver-timeout=$SCREENSAVER:" $FILE
 
         sed -n '/\[greeter\]/,$p' $FILE                 # Print [greeter] section
+		rm ${FILE}.bak # Delete backup file
     else
         printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
     fi
-
-   rm ${FILE}.bak # Delete backup file
    
    # ---------- patch Matcha-sea theme used in lockscreen --------------- 
    patch_lockscreen_theme
