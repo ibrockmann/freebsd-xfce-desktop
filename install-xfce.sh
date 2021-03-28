@@ -147,7 +147,7 @@ set_umask () {
 		cap_mkdb $FILE
 		rm ${FILE}.bak # Delete backup file
 	else
-        printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
+        printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
     fi
 }
 
@@ -957,7 +957,9 @@ system_hardening () {
                     -e "s:^security.bsd.see_jail_proc=.*:security.bsd.see_jail_proc=0:"                       \	 # Hide processes running in jails
                     -e "s:^security.bsd.unprivileged_read_msgbuf=.*:security.bsd.unprivileged_read_msgbuf=0:" \	 # Disable reading kernel message buffer for unprivileged users
                     -e "s:^security.bsd.unprivileged_proc_debug=.*:security.bsd.unprivileged_proc_debug=0:"   \  # Disable process debugging facilities for unprivileged users
-					-e "s:^security.bsd.stack_guard_page=.*:security.bsd.stack_guard_page=1:"				  \	 # Additional stack protection, specifies the number of guard pages for a stack that grows	
+					-e "s:^security.bsd.stack_guard_page=.*:security.bsd.stack_guard_page=1:"				  \	 # Additional stack protection, specifies the number of guard pages for a stack that grows
+					#-e "s:^security.bsd.hardlink_check_uid=.*:security.bsd.hardlink_check_uid=1:"			  \	 # Unprivileged users are not permitted to create hard links to files not owned by them	
+					#-e "s:^security.bsd.hardlink_check_gid=.*:security.bsd.hardlink_check_gid=1:"			  \	 # Unprivileged users are not permitted to create hard links to files if they are not member of file's group.
                     -e "s:^kern.randompid=.*:kern.randompid=1:" $FILE											 # Randomize the PID of newly created processes
 	
 	# append system hardening parameter at EOF, if parameter not exists 
@@ -967,6 +969,8 @@ system_hardening () {
 	grep -q '^security.bsd.unprivileged_read_msgbuf=' $FILE	|| echo 'security.bsd.unprivileged_read_msgbuf=0' 	>> $FILE
 	grep -q '^security.bsd.unprivileged_proc_debug=' $FILE 	|| echo 'security.bsd.unprivileged_proc_debug=0'	>> $FILE
 	grep -q '^security.bsd.stack_guard_page=' $FILE 		|| echo 'security.bsd.stack_guard_page=1'			>> $FILE
+	#grep -q '^security.bsd.hardlink_check_uid=' $FILE 		|| echo 'security.bsd.hardlink_check_uid=1'			>> $FILE
+	#grep -q '^security.bsd.hardlink_check_gid=' $FILE 		|| echo 'security.bsd.hardlink_check_gid=1'			>> $FILE
 	grep -q '^kern.randompid=' $FILE 						|| echo 'kern.randompid=1' 							>> $FILE
 	
     else
@@ -981,20 +985,15 @@ system_hardening () {
 	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Disable opening Syslogd network socket (disables remote logging)...\n"
 	sysrc syslogd_flags="-ss"		# Disable opening Syslogd network socket (disables remote logging)
 	
+	
 	# Disable sendmail service
-	#printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Disable sendmail service)...\n"
+	#printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Disable sendmail service...\n"
 	#sysrc sendmail_enable="NONE"
 }
 system_hardening
 
 
-# 
-# unprivileged users are not permitted to create hard links to files not owned by them or if they are not member of file's group
-# This setting could impact on programs like Poudriere! 
-#security.bsd.hardlink_check_uid=1
-#security.bsd.hardlink_check_gid=1
-
-
+ 
 
 
 
