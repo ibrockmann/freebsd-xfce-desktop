@@ -960,8 +960,12 @@ system_hardening () {
 					-e "s:^security.bsd.stack_guard_page=.*:security.bsd.stack_guard_page=1:"				  \	 # Additional stack protection, specifies the number of guard pages for a stack that grows
 					#-e "s:^security.bsd.hardlink_check_uid=.*:security.bsd.hardlink_check_uid=1:"			  \	 # Unprivileged users are not permitted to create hard links to files not owned by them	
 					#-e "s:^security.bsd.hardlink_check_gid=.*:security.bsd.hardlink_check_gid=1:"			  \	 # Unprivileged users are not permitted to create hard links to files if they are not member of file's group.
-                    -e "s:^kern.randompid=.*:kern.randompid=1:" $FILE											 # Randomize the PID of newly created processes
-	
+                    -e "s:^kern.randompid=.*:kern.randompid=1:" $FILE										  \  # Randomize the PID of newly created processes
+					-e "s:^kern.ipc.shm_use_phys=.*:kern.ipc.shm_use_phys=1:" $FILE							  \	 # Lock shared memory into RAM and prevent it from being paged out to swap (default 0, disabled)
+					-e "s:^kern.msgbuf_show_timestamp=.*:kern.msgbuf_show_timestamp=1:" $FILE				  \	 # Display timestamp in msgbuf (default 0)
+					#-e "s:^hw.kbd.keymap_restrict_change=.*:hw.kbd.keymap_restrict_change=4:" $FILE		  \  # Disallow keymap changes for non-privileged users
+										
+										
 	# append system hardening parameter at EOF, if parameter not exists 
 	grep -q '^security.bsd.see_other_gids=' $FILE 			|| echo 'security.bsd.see_other_gids=0' 			>> $FILE
 	grep -q '^security.bsd.see_other_uids=' $FILE 			|| echo 'security.bsd.see_other_uids=0' 			>> $FILE
@@ -972,7 +976,10 @@ system_hardening () {
 	#grep -q '^security.bsd.hardlink_check_uid=' $FILE 		|| echo 'security.bsd.hardlink_check_uid=1'			>> $FILE
 	#grep -q '^security.bsd.hardlink_check_gid=' $FILE 		|| echo 'security.bsd.hardlink_check_gid=1'			>> $FILE
 	grep -q '^kern.randompid=' $FILE 						|| echo 'kern.randompid=1' 							>> $FILE
-	
+	grep -q '^kern.ipc.shm_use_phys=' $FILE 				|| echo 'kern.ipc.shm_use_phys=1'					>> $FILE
+	grep -q '^kern.msgbuf_show_timestamp=' $FILE 			|| echo 'kern.msgbuf_show_timestamp=1'				>> $FILE
+	#grep -q '^hw.kbd.keymap_restrict_change=' $FILE 		|| echo 'hw.kbd.keymap_restrict_change=4'			>> $FILE
+		
     else
         printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
     fi
@@ -991,11 +998,6 @@ system_hardening () {
 	#sysrc sendmail_enable="NONE"
 }
 system_hardening
-
-
- 
-
-
 
 
 # ------------------------------------ reboot FreeBSD --------------------------
