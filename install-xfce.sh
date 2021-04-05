@@ -41,6 +41,7 @@ FIREWALL_ALLOWSERVICE='192.168.178.0/24'	# List of IPs which has access to clien
 # Delay in seconds before autobooting FreeBSD
 AUTOBOOTDELAY='5'				
 
+
 # ---------------------------------- utilities -------------------------------
 # ---- 1 - utility will be installed ---- 0 - utility will NOT be installed --
 
@@ -53,7 +54,7 @@ INSTALL_OCTOPKG=1				# Graphical front-end to the FreeBSD pkg-ng package manager
 INSTALL_RKHUNTER=1				# Rootkit detection tool
 INSTALL_SYSINFO=1				# Utility used to gather system configuration information
 
-
+INSTALL_CPU_MICROCODE_UPDATES=0	# Install Intel and AMD CPUs microcode updates and load updates automatically on a FreeBSD system startup
 # -----------------------------------------------------------------------------
 # --------------------- Do not change anything from here on -------------------
 # -----------------------------------------------------------------------------
@@ -759,7 +760,7 @@ install_rkhunter () {
 
 # ------------------------ Intel and AMD CPUs microcode updates ---------------
 install_cpu_microcode_updates () {
-	if [ "$INSTALL_CPU_MICROCODE_UPDATES" -eq 0 ]; then
+	if [ "$INSTALL_CPU_MICROCODE_UPDATES" -eq 1 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}devcpu-data${COLOR_NC} will allow host startup to update the CPU microcode on a FreeBSD system automatically...\n"
 		install_packages devcpu-data # pkg install devcpu-data
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/boot/loader.conf${COLOR_NC} to update the CPU microcode automatically on on a FreeBSD system startup...\n"
@@ -851,12 +852,6 @@ INSTALL_CUPS=$?				# CUPS is a standards-based, open source printing system
 #  ----------------------------------- security -------------------------------
 yes_no "Install KeePass (easy-to-use password manager)?"
 INSTALL_KEEPASS=$?
-
-
-# ------------------------ Intel and AMD CPUs microcode updates ---------------
-yes_no "Install CPU Microcodes and load updates automatically on a FreeBSD system startup?" NO
-INSTALL_CPU_MICROCODE_UPDATES=$?
-
 
 # ----------------------------- abort installation  ---------------------------
 printf "\n[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  Last change to cancel the installation!\n"    
