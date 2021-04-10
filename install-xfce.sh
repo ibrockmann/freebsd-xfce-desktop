@@ -2,7 +2,7 @@
 
 #============================================================================
 # Install Xfce 4.16 Desktop on FreeBSD 12.2
-# by ibrockmann, Version: 2021-04-02
+# by ibrockmann, Version: 2021-04-05
 # 
 # Notes: Installation of Xfce 4.16 Desktop Environment with Matcha and 
 #  Arc GTK Themes on FreeBSD 12.2
@@ -409,7 +409,8 @@ case $VGA_CARD in
 		# /boot/loader.conf, or later in the boot process if you add linux_enable="YES" to your /etc/rc.conf.
 		sysrc linux_enable="YES";;
 			 
-	*) printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] Only NVIDEA graphics cards or installation on VMWare is supportet!\n";;
+	*) printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] Only NVIDEA graphics cards or installation on VMWare is supportet!\n"
+	exit 1;;
 	  
 esac
 }
@@ -796,10 +797,12 @@ set_umask
 freebsd_update
 install_pkg
 
-# -------------------------------- Switching from quarterly to latest?  ------   
+# -------------------------------- Switching from quarterly to latest?  ------ 
+  
 if (yes_no "\nSwitch from ${COLOR_CYAN}quarterly${COLOR_NC} to the ${COLOR_CYAN}latest${COLOR_NC} repository (use latest versions of FreeBSD packages)? " NO); then
 	switch_to_latest_repository
 fi
+
 
 add_login_class
 # Set login class
@@ -943,7 +946,7 @@ set_lightdm_greeter
 # ------------------------------ install applications--------------------------
 # -----------------------------------------------------------------------------
 install_editors () {
-	if [ "$INSTALL_EDITOR" -eq 1 ]; then
+	if [ "$INSTALL_EDITOR" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Vim${COLOR_NC}...\n"
 		install_packages vim
 	fi
@@ -952,7 +955,7 @@ install_editors
 
 
 install_gimp () {
-	if [ "$INSTALL_GIMP" -eq 1 ]; then
+	if [ "$INSTALL_GIMP" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Gimp${COLOR_NC}...\n"
 		install_packages gimp
 	fi
@@ -961,7 +964,7 @@ install_gimp
 
 
 install_chromium () {
-	if [ "$INSTALL_CHROMIUM" -eq 1 ]; then
+	if [ "$INSTALL_CHROMIUM" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Chromium${COLOR_NC}...\n"
 		install_packages chromium
 	fi
@@ -970,27 +973,27 @@ install_chromium
 
 
 install_multimedia () {
-	if [ "$INSTALL_AUDIOPLAYER" -eq  ]; then
+	if [ "$INSTALL_AUDIOPLAYER" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Audacious${COLOR_NC}...\n"
 		install_packages audacious
 	fi
 	
-	if [ "$INSTALL_MPV" -eq 1 ]; then
+	if [ "$INSTALL_MPV" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}mvp${COLOR_NC}...\n"
 		install_packages mpv
 	fi
 
-	if [ "$INSTALL_IMAGEVIEWER" -eq 1 ]; then
+	if [ "$INSTALL_IMAGEVIEWER" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Ristretto${COLOR_NC}...\n"
 		install_packages ristretto 
 	fi
 
-	if [ "$INSTALL_SHOTWELL" -eq 1 ]; then
+	if [ "$INSTALL_SHOTWELL" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Shotwell${COLOR_NC}...\n"
 		install_packages shotwell
 	fi
 
-	if [ "$INSTALL_VLC" -eq 1 ]; then
+	if [ "$INSTALL_VLC" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}VLC${COLOR_NC}...\n"
 		install_packages vlc
 	fi
@@ -999,8 +1002,7 @@ install_multimedia
 
 
 install_office () {
-	if [ "$INSTALL_OFFICE" -eq 1
-	]; then
+	if [ "$INSTALL_OFFICE" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Libre Office${COLOR_NC}...\n"
 		install_packages libreoffice
 	fi
@@ -1009,7 +1011,7 @@ install_office
 
 
 install_mail () {
-	if [ "$INSTALL_MAIL" -eq 1 ]; then
+	if [ "$INSTALL_MAIL" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Thunderbird${COLOR_NC}...\n"
 		install_packages thunderbird
 	fi
@@ -1018,7 +1020,7 @@ install_mail
 
 
 # -------------------------------- printing, only network printer -----------------------------------
-	if [ "$INSTALL_CUPS" -eq 1 ]; then
+	if [ "$INSTALL_CUPS" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Common UNIX Printing System (CUPS)${COLOR_NC}...\n"
 		install_packages cups
 		sysrc cupsd_enable="YES"
@@ -1027,7 +1029,7 @@ install_mail
 
 
 install_keepass () {
-	if [ "$INSTALL_KEEPASS" -eq 1 ]; then
+	if [ "$INSTALL_KEEPASS" -eq 0 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Keepass${COLOR_NC}...\n"
 		install_packages keepass
 	fi
@@ -1099,6 +1101,9 @@ install_cpu_microcode_updates
 # --------------------------- silence the boot messages -----------------------
 silent_boot_messages 
 
+#Specify the maximum desired resolution for	the EFI	console.
+#/boot/loader.conf
+#sysrc -f /boot/loader.conf efi_max_resolution="1920x1080"
 
 # ------------------------------------ reboot FreeBSD --------------------------
 # -----------------------------------------------------------------------------
