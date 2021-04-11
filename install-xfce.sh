@@ -1,11 +1,11 @@
 #!/bin/sh
 
 #============================================================================
-# Install Xfce 4.16 Desktop on FreeBSD 12.2
-# by ibrockmann, Version: 2021-04-05
+# Install Xfce 4.16 Desktop on FreeBSD 13.0
+# by ibrockmann, Version: 2021-04-11
 # 
 # Notes: Installation of Xfce 4.16 Desktop Environment with Matcha and 
-#  Arc GTK Themes on FreeBSD 12.2
+#  Arc GTK Themes on FreeBSD 13.0
 #
 # Display driver: Script supports onyl current nvidia (440.xx series) and VMware
 #  display driver
@@ -80,7 +80,7 @@ COUNTRY_CODE=`echo $LOCALE | cut -d . -f1 | cut -d _ -f2`	# Country_Code
 # ------------------------------------ greeting -------------------------------
 install_xfce_greeter () {
 clear
-printf "${COLOR_CYAN}Installation of Xfce Desktop Environment for FreeBSD 12.2${COLOR_NC}\n\n"
+printf "${COLOR_CYAN}Installation of Xfce Desktop Environment for FreeBSD 13.0${COLOR_NC}\n\n"
 printf "This script will install pkg, X11 and the Xfce Desktop with Matcha and Arc GTK Themes.\n"
 printf "Additionally some basic applications will be installed: Audacious, Catfish, Chromium,\n"
 printf "Gimp, htop, KeePass, LibreOffice, lynis , mpv, neofetch, OctoPkg, Ristretto, rkhunter,\n"
@@ -349,7 +349,7 @@ check_vga_card() {
 			
 			#each device has 4 lines of data
 			if [ $i -ge 0 ] && [ $i -lt 5 ]; then
-					vendor=`echo $line | grep -w "vendor" | cut -d'=' -f2`
+					vendor=`echo $line | grep '^vendor' | cut -d'=' -f2`
 					i=$(( $i - 1 ))
 					case $vendor in
 						"'VMware'") return 1;; # X11 VMWARE video driver
