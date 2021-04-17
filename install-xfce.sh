@@ -278,8 +278,8 @@ install_packages() {
 for PACKAGENAME in $*
 do
 		if pkg search -L name $PACKAGENAME | cut -w -f1 | grep -x -q $PACKAGENAME; then #Check if FreeBSd package vorhanden
-			#pkg install -y $PACKAGENAME
-			pkg install $PACKAGENAME
+			pkg install -y $PACKAGENAME
+			#pkg install $PACKAGENAME
 		else
 			printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] pkg: No packages available to install matching ${COLOR_CYAN}"$PACKAGENAME"${COLOR_NC}!\n"
 	fi
@@ -462,11 +462,11 @@ patch_lockscreen_theme () {
 	if [ -f $FILE ]; then   # gtk.css exists?
         # patch background color in #buttonbox_frame rule set
 
-		##buttonbox_frame {
+		## {
 		#  padding-top: 20px;
 		#  padding-bottom: 0px;
 		#  border-style: none;
-		#  background-color: rgba(37, 45, 48, 0.95);
+		#  background-color: rgba(27, 34, 36, 0.95); --> rgba(0, 35, 44, 0.95);
 		#  border-bottom-left-radius: 3px;
 		#  border-bottom-right-radius: 3px;
 		#  border: solid rgba(0, 0, 0, 0.1);
@@ -474,7 +474,26 @@ patch_lockscreen_theme () {
 		#  box-shadow: inset 0 1px rgba(37, 45, 48, 0.95);
 		#}		
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Patching ${COLOR_CYAN}${FILE}${COLOR_NC}...\n"
-        sed -i .bak "s/background-color: rgba(37, 45, 48, 0.95);/background-color: rgba(0, 35, 44, 0.95);/" $FILE
+       
+	    # sed '/Beginn/,/Ende/ s/alt/NEU/' inputfile
+		sed -i .bak '/#buttonbox_frame {/,/}/ s/background-color:.*/background-color: rgba(0, 35, 44, 0.95);/' $FILE
+	   
+	   
+	    ##buttonbox_frame button {
+		#color: #c6cdcb;
+		#border-color: rgba(0, 0, 0, 0.95);
+		#background-color: rgba(34, 42, 45, 0.95); --> rgba(198, 208,203, 0.1);
+		#}
+		sed -i .bak '/buttonbox_frame button {/,/}/ s/background-color:.*/background-color: rgba(198, 208,203, 0.1);/' $FILE
+		
+
+		##buttonbox_frame button:hover {
+		#color: #c6cdcb;
+		#border-color: rgba(0, 0, 0, 0.95);
+		#background-color: rgba(198, 205, 203, 0.1); --> background-color: rgba(86, 106, 111, 0.42);
+		#}
+	   	sed -i .bak '/buttonbox_frame button:hover {/,/}/ s/background-color:.*/background-color: rgba(86, 106, 111, 0.42);/' $FILE
+    
     else
         printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
    fi
@@ -1069,7 +1088,7 @@ install_utilities () {
 		install_packages octopkg
 	fi
 	
-	if [ "$INSTALL_OCTOPKG" -eq 1 ]; then
+	if [ "$INSTALL_RKHUNTER" -eq 1 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}rkhunter${COLOR_NC}...\n"
 		install_rkhunter
 	fi
