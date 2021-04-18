@@ -279,8 +279,8 @@ install_packages() {
 for PACKAGENAME in $*
 do
 		if pkg search -L name $PACKAGENAME | cut -w -f1 | grep -x -q $PACKAGENAME; then #Check if FreeBSd package vorhanden
-			pkg install -y $PACKAGENAME
-			#pkg install $PACKAGENAME
+			#pkg install -y $PACKAGENAME
+			pkg install $PACKAGENAME
 		else
 			printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] pkg: No packages available to install matching ${COLOR_CYAN}"$PACKAGENAME"${COLOR_NC}!\n"
 	fi
@@ -431,7 +431,7 @@ fetch_wallpaper () {
 		# ----------- use curl instead of fetch ------------------------------
 		install_packages curl
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/Mountain_1920x1080.jpg${COLOR_NC} from gitgub...\n"
-		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mount_Fitz_Roy_1920x1080.png
+		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/Mount_Fitz_Roy_1920x1080.png
 	else
 		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
 	fi	
@@ -573,7 +573,7 @@ set_lightdm_greeter () {
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Updating LightDM GTK+ Greeter configuration...\n"
         
 		# if #default-user-image= does not exists, insert default-user-image parameter before line with #screensaver-timeout=
-		if ! grep -q '#default-user-image=' $FILE; then
+		if ! grep -q 'default-user-image=' $FILE; then
 			awk '{if (match($0, "#screensaver-timeout=")>0){print "#default-user-image=\n"$0}else{print $0}}' $FILE > $XFILE.bak
 			mv $XFILE.bak $FILE
 		fi
