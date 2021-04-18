@@ -2,7 +2,7 @@
 
 #============================================================================
 # Install Xfce 4.16 Desktop on FreeBSD 13.0
-# by ibrockmann, Version: 2021-04-11
+# by ibrockmann, Version: 2021-04-18
 # 
 # Notes: Installation of Xfce 4.16 Desktop Environment with Matcha and 
 #  Arc GTK Themes on FreeBSD 13.0
@@ -46,6 +46,7 @@ AUTOBOOTDELAY='5'
 # ---- 1 - utility will be installed ---- 0 - utility will NOT be installed --
 
 INSTALL_CATFISH=1				# Catfish is a GTK based search utility
+INSTALL_DOAS=1					# Simple sudo alternative to run commands as another user
 INSTALL_HTOP=1					# Better top - interactive process viewer
 INSTALL_FILE_ROLLER=1			# GNOME Archive manager (file-roller) for zip files, tar, etc
 INSTALL_LYNIS=1					# Security auditing and hardening tool, for UNIX-based systems
@@ -505,13 +506,16 @@ set_lightdm_greeter () {
 
     # Variables
 	local FILE
+	local XFILE
 	local BACKGROUND="/usr/local/share/backgrounds/FreeBSD-lockscreen_v2-blue.png"
+	local USER_DEFAULT_IMAGE="/usr/local/share/icons/hicolor/128x128/apps/xfce4-logo.png"
 	local USER_BACKGROUND="false"
 	local THEME="Matcha-sea"
 	local FONT="Cantarell Bold 12"
 	local INDICATORS="~host;~spacer;~clock;~spacer;~session;~a11y;~language;~power"
 	local CLOCK="%A, %d. %B %Y     %H:%M"
 	local POSITION="25%,center 45%,center"
+	local USER_DEFAULT_IMAGE="/usr/local/share/icons/hicolor/128x128/apps/xfce4-logo.png"
 	local SCREENSAVER="60"
 	local XRANDR
 	
@@ -562,26 +566,36 @@ set_lightdm_greeter () {
 	
     # ligtdm-gtk-greeter.conf
     FILE="/usr/local/etc/lightdm/lightdm-gtk-greeter.conf"
-
+	XFILE=`basename $FILE .conf`
+	
 	if [ -f $FILE ]; then   # lightdm-gtk-greeter.conf exists?
         # tweak lightdm-gtk-greeter configuration
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Updating LightDM GTK+ Greeter configuration...\n"
-            
+        
+		# if #default-user-image= does not exists, insert default-user-image parameter before line with #screensaver-timeout=
+		if ! grep -q '#default-user-image=' $FILE; then
+			awk '{if (match($0, "#screensaver-timeout=")>0){print "#default-user-image=\n"$0}else{print $0}}' $FILE > $XFILE.bak
+			mv $XFILE.bak $FILE
+		fi
+		
+		
 		# use delimiter ':' instead of '/'
-        sed -i .bak -e "s:#background=.*:background=$BACKGROUND:"                       \
-                    -e "s:#user-background=.*:user-background=$USER_BACKGROUND:"        \
-                    -e "s:#theme-name=.*:theme-name=$THEME:"                            \
-                    -e "s:#font-name=.*:font-name=$FONT:"                               \
-                    -e "s:#indicators=.*:indicators=$INDICATORS:"                       \
-                    -e "s/#clock-format=.*/clock-format=$CLOCK/"                        \
-                    -e "s:#position=.*:position=$POSITION:"                             \
+        sed -i .bak -e "s:#background=.*:background=$BACKGROUND:"                       	\
+                    -e "s:#user-background=.*:user-background=$USER_BACKGROUND:"        	\
+                    -e "s:#theme-name=.*:theme-name=$THEME:"                            	\
+                    -e "s:#font-name=.*:font-name=$FONT:"                               	\
+                    -e "s:#indicators=.*:indicators=$INDICATORS:"                       	\
+                    -e "s/#clock-format=.*/clock-format=$CLOCK/"                        	\
+                    -e "s:#position=.*:position=$POSITION:"                             	\
+					-e "s:#default-user-image=.*:default-user-image=$USER_DEFAULT_IMAGE:"	\
                     -e "s:#screensaver-timeout=.*:#screensaver-timeout=$SCREENSAVER:" $FILE
-
+							
         sed -n '/\[greeter\]/,$p' $FILE                 # Print [greeter] section
 		rm ${FILE}.bak # Delete backup file
     else
         printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
     fi
+
    
    # ---------- patch Matcha-sea theme used in lockscreen --------------- 
    patch_lockscreen_theme
@@ -778,6 +792,56 @@ install_rkhunter () {
 }
 
 
+# ------------------------------------ utilities ------------------------------
+install_utilities () {
+	if [ "$INSTALL_CATFISH" -eq 1 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Catfish${COLOR_NC}...\n"
+		install_packages catfish
+	fi
+	
+	if [ "$INSTALL_DOAS" -eq 1 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}doas${COLOR_NC}...\n"
+		install_packages doas
+	fi
+	
+	if [ "$INSTALL_FILE_ROLLER" -eq 1 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Archive manager for zip files, tar, etc${COLOR_NC}...\n"
+		install_packages file-roller
+	fi
+		
+	if [ "$INSTALL_HTOP" -eq 1 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Htop${COLOR_NC}...\n"
+		install_packages htop
+	fi
+	
+	if [ "$INSTALL_LYNIS" -eq 1 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}lynis${COLOR_NC}...\n"
+		install_packages lynis
+	fi
+	
+	if [ "$INSTALL_NEOFETCH" -eq 1 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Neofetch${COLOR_NC}...\n"
+		install_packages neofetch
+	fi
+	
+	if [ "$INSTALL_OCTOPKG" -eq 1 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}OctpPkg${COLOR_NC}...\n"
+		install_packages octopkg
+	fi
+	
+	if [ "$INSTALL_RKHUNTER" -eq 1 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}rkhunter${COLOR_NC}...\n"
+		install_rkhunter
+	fi
+	
+	if [ "$INSTALL_SYSINFO" -eq 1 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Sysinfo${COLOR_NC}...\n"
+		install_packages sysinfo
+	fi
+
+}
+
+
 # ------------------------ Intel and AMD CPUs microcode updates ---------------
 install_cpu_microcode_updates () {
 	if [ "$INSTALL_CPU_MICROCODE_UPDATES" -eq 1 ]; then
@@ -875,6 +939,10 @@ INSTALL_CUPS=$?				# CUPS is a standards-based, open source printing system
 yes_no "Install KeePass (easy-to-use password manager)?"
 INSTALL_KEEPASS=$?
 
+#  ----------------------------------- utilities -------------------------------
+yes_no "Install utilities, e.g catfish, doas, htop, file archiver lynis, etc. \n(please see user defined environment variables section)?"
+INSTALL_UTILITIES=$?
+
 # ----------------------------- abort installation  ---------------------------
 printf "\n[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  Last change to cancel the installation!\n"    
 if !(yes_no "Is everything above correct? Start installation now?" NO); then
@@ -941,11 +1009,6 @@ printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XFCE GTK th
 # pkg install -y matcha-gtk-themes gtk-arc-themes
 install_packages matcha-gtk-themes gtk-arc-themes
 
-
-# ------------------------------------ install Papirus icons -------------
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Papirus icons${COLOR_NC}...\n"
-# pkg install -y papirus-icon-theme
-install_packages papirus-icon-theme
 
 # ------------------------------------- update rc.conf, enable dbus -----------
 printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/etc/rc.conf${COLOR_NC}\n" 
@@ -1057,49 +1120,10 @@ install_keepass
 
 
 # ------------------------------------ utilities ------------------------------
-install_utilities () {
-	if [ "$INSTALL_CATFISH" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Catfish${COLOR_NC}...\n"
-		install_packages catfish
-	fi
-	
-	if [ "$INSTALL_FILE_ROLLER" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Archive manager for zip files, tar, etc${COLOR_NC}...\n"
-		install_packages file-roller
-	fi
-		
-	if [ "$INSTALL_HTOP" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Htop${COLOR_NC}...\n"
-		install_packages htop
-	fi
-	
-	if [ "$INSTALL_LYNIS" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}lynis${COLOR_NC}...\n"
-		install_packages lynis
-	fi
-	
-	if [ "$INSTALL_NEOFETCH" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Neofetch${COLOR_NC}...\n"
-		install_packages neofetch
-	fi
-	
-	if [ "$INSTALL_OCTOPKG" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}OctpPkg${COLOR_NC}...\n"
-		install_packages octopkg
-	fi
-	
-	if [ "$INSTALL_RKHUNTER" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}rkhunter${COLOR_NC}...\n"
-		install_rkhunter
-	fi
-	
-	if [ "$INSTALL_SYSINFO" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Sysinfo${COLOR_NC}...\n"
-		install_packages sysinfo
-	fi
+if [ "$INSTALL_UTILITIES" -eq 0 ]; then
+	install_utilities
+fi
 
-}
-install_utilities
 
 
 # -----------------------------------------------------------------------------
