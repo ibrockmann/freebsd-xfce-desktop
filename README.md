@@ -45,10 +45,14 @@ Follow the instructions on screen. If you made a mistake answering the questions
 
 tbd.
 
+## Testing
+
+The installation was only tested with the current nvidia drivers and under VMware on a desktop PC.
+
 ## License
 
 This project is licensed under the BSD 3 License - see the LICENSE.md file for details.
 
 ## Acknowledgments
 
-* [kamila.is](https://kamila.is/making/freebsd-wallpapers/) for the FreeBSD/Beastie wallpapers
+[kamila.is](https://kamila.is/making/freebsd-wallpapers/) for the FreeBSD/Beastie wallpapers
