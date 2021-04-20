@@ -55,7 +55,7 @@ The installation was only tested with the current nvidia drivers and under VMwar
 
 ## License
 
-This project is licensed under the BSD 3 License -See ``LICENSE`` for more information.
+This project is licensed under the BSD 3 License - See ``LICENSE`` for more information.
 
 ## Acknowledgments
 
