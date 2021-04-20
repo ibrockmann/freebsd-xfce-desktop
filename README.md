@@ -43,11 +43,11 @@ Follow the instructions on screen. If you made a mistake answering the questions
 
 ## Screenshots
 
-<img src="screenshots/bootscreen.png" width="600" height="300"/>
+<img src="./screenshots/bootscreen.png" width="600" height="300"/>
 
-<img src="screenshots/loginscreen.png" width="600" height="300"/>
+<img src="./screenshots/loginscreen.png" width="600" height="300"/>
 
-<img src="screenshots/desktop.png" width="600" height="300"/>
+<img src="./screenshots/desktop.png" width="600" height="300"/>
 
 ## Testing
 
@@ -55,7 +55,7 @@ The installation was only tested with the current nvidia drivers and under VMwar
 
 ## License
 
-This project is licensed under the BSD 3 License - see the LICENSE.md file for details.
+This project is licensed under the BSD 3 License -See ``LICENSE`` for more information.
 
 ## Acknowledgments
 
