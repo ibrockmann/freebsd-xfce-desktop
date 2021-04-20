@@ -31,7 +31,7 @@ $ fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xf
 $ chmod u+x install-xfce.sh
 ```
 
-The Installation script must be run as root, therefore switch to root ([su](https://www.freebsd.org/cgi/man.cgi?query=su&apropos=0&sektion=0&manpath=FreeBSD+13.0-current&arch=default&format=html)) before you run it:
+The install script must be run as root, therefore switch to root ([su](https://www.freebsd.org/cgi/man.cgi?query=su&apropos=0&sektion=0&manpath=FreeBSD+13.0-current&arch=default&format=html)) before you run it:
 
 ```
 # ./install-xfce.sh | tee -a ./install-xfce.log
