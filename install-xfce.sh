@@ -279,8 +279,8 @@ install_packages() {
 for PACKAGENAME in $*
 do
 		if pkg search -L name $PACKAGENAME | cut -w -f1 | grep -x -q $PACKAGENAME; then #Check if FreeBSd package vorhanden
-			#pkg install -y $PACKAGENAME
-			pkg install $PACKAGENAME
+			pkg install -y $PACKAGENAME
+			#pkg install $PACKAGENAME
 		else
 			printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] pkg: No packages available to install matching ${COLOR_CYAN}"$PACKAGENAME"${COLOR_NC}!\n"
 	fi

@@ -43,7 +43,11 @@ Follow the instructions on screen. If you made a mistake answering the questions
 
 ## Screenshots
 
-tbd.
+<img src="screenshots/bootscreen.png" width="600" height="300"/>
+
+<img src="screenshots/loginscreen.png" width="600" height="300"/>
+
+<img src="screenshots/desktop.png" width="600" height="300"/>
 
 ## Testing
 
