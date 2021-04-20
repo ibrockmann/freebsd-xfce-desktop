@@ -19,7 +19,7 @@ It is recommended that you start with a clean installation of FreeBSD 13.0 64-bi
 ### Prerequisites
 
 - Installation of FreeBSD 13.0-RELEASE-amd64
-- Display card: nvidea video card (440.xx series  display driver) or installation on  VMWare
+- Display card: nvidea video card (440.xx series display driver) or installation on  VMWare
 - Regular user account that belong to the operator and wheel group
 
 ### Installing
