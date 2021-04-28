@@ -82,7 +82,8 @@ COUNTRY_CODE=`echo $LOCALE | cut -d . -f1 | cut -d _ -f2`	# Country_Code
 install_xfce_greeter () {
 clear
 printf "${COLOR_CYAN}Installation of Xfce Desktop Environment for FreeBSD 13.0${COLOR_NC}\n\n"
-printf "This script will install pkg, X11 and the Xfce Desktop with Matcha and Arc GTK Themes.\n"
+printf "This script will install pkg, X11 and the Xfce Desktop Environment with Matcha and\n"
+printf "Arc GTK Themes.\n" 
 printf "Additionally some basic applications will be installed: Audacious, Catfish, Chromium,\n"
 printf "doas, Gimp, htop, KeePass, LibreOffice, lynis , mpv, neofetch, OctoPkg, Ristretto,\n"
 printf "rkhunter, Shotweel, Sysinfo, Thunderbird, Vim, VLC.\n" 
@@ -427,12 +428,8 @@ fetch_wallpaper () {
 			
 		# --------------------- fetch favorite wallpaper ----------------------
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/Mountain_1920x1080.jpg${COLOR_NC} from gitgub...\n"
-		fetch --no-verify-peer https://github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mount_Fitz_Roy_1920x1080.jpg
-	
-		# ----------- use curl instead of fetch ------------------------------
-		#install_packages curl
-		
-		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/Mount_Fitz_Roy_1920x1080.png
+		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/Mount_Fitz_Roy_1920x1080.jpg
+			
 	else
 		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
 	fi	
@@ -626,21 +623,7 @@ set_lightdm_greeter () {
 		chmod 644 FreeBSD-lockscreen_v3-red.png
 		
 				
-		# ----------- use curl instead of fetch ------------------------------
-		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v1-blue.png${COLOR_NC} from gitgub...\n"
-		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-blue.png
-		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v1-red.png${COLOR_NC} from gitgub...\n"
-		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-red.png
-		
-		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v2-blue.png${COLOR_NC} from gitgub...\n"
-		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-blue.png
-		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v2-red.png${COLOR_NC} from gitgub...\n"
-		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-red.png
-		
-		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v3-blue.png${COLOR_NC} from gitgub...\n"
-		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-blue.png
-		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v3-red.png${COLOR_NC} from gitgub...\n"
-		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-red.png	
+	
 		
 	else
 		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
@@ -920,7 +903,7 @@ INSTALL_CHROMIUM=$?
 
 #  ----------------------------------- mulitmedia -----------------------------
 ## ----------------------------------- software to be installed ---------------
-yes_no "Install Video & Audio players (Audacious, mpv, VLC, Ristretto, Shotweel)?"
+yes_no "Install Audio, Graphics & Video Applications (Audacious, mpv, VLC, Ristretto, Shotweel)?"
 INSTALL_AUDIOPLAYER=$?
 INSTALL_MPV=$?
 INSTALL_VLC=$?
@@ -941,7 +924,7 @@ yes_no "Install KeePass (easy-to-use password manager)?"
 INSTALL_KEEPASS=$?
 
 #  ----------------------------------- utilities -------------------------------
-yes_no "Install utilities, e.g catfish, doas, htop, file archiver lynis, etc. \n(please see user defined environment variables section)?"
+yes_no "Install utilities, e.g catfish, doas, htop, file archiver lynis, etc. ?"
 INSTALL_UTILITIES=$?
 
 # ----------------------------- abort installation  ---------------------------
