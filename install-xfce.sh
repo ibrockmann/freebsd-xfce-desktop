@@ -12,9 +12,9 @@
 # When using VMware, Screen size variable muste be set to your needs.
 # Default: 2560x1440
 #
-# Applications: Audacious, Catfish, Chromium, Gimp, htop, KeePass, LibreOffice,
-# lynis, mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, sysinfo,
-# Thunderbird, VIM, VLC
+# Applications: Audacious, Catfish, Chromium, doas, Gimp, htop, KeePass,
+# LibreOffice, lynis, mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel,
+# sysinfo, Thunderbird, VIM, VLC
 #
 # Language and country code is set to German. It can be changed to your need in
 # User defined variables section.
@@ -84,8 +84,8 @@ clear
 printf "${COLOR_CYAN}Installation of Xfce Desktop Environment for FreeBSD 13.0${COLOR_NC}\n\n"
 printf "This script will install pkg, X11 and the Xfce Desktop with Matcha and Arc GTK Themes.\n"
 printf "Additionally some basic applications will be installed: Audacious, Catfish, Chromium,\n"
-printf "Gimp, htop, KeePass, LibreOffice, lynis , mpv, neofetch, OctoPkg, Ristretto, rkhunter,\n"
-printf "Shotweel, Sysinfo, Thunderbird, Vim, VLC.\n" 
+printf "doas, Gimp, htop, KeePass, LibreOffice, lynis , mpv, neofetch, OctoPkg, Ristretto,\n"
+printf "rkhunter, Shotweel, Sysinfo, Thunderbird, Vim, VLC.\n" 
 printf "Install script supports current nvidia FreeBSD (X64) and VMware display drivers.\n"
 printf "When using VMware, Screen size variable muste be set to your needs. Default: 2560x1440\n"
 printf "Language and country code is set to German.\n"
@@ -279,8 +279,8 @@ install_packages() {
 for PACKAGENAME in $*
 do
 		if pkg search -L name $PACKAGENAME | cut -w -f1 | grep -x -q $PACKAGENAME; then #Check if FreeBSd package vorhanden
-			pkg install -y $PACKAGENAME
-			#pkg install $PACKAGENAME
+			#pkg install -y $PACKAGENAME
+			pkg install $PACKAGENAME
 		else
 			printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] pkg: No packages available to install matching ${COLOR_CYAN}"$PACKAGENAME"${COLOR_NC}!\n"
 	fi
@@ -354,7 +354,7 @@ check_vga_card() {
 					i=$(( $i - 1 ))
 					case $vendor in
 						"'VMware'") return 1;; # X11 VMWARE video driver
-						"'nvidea'") return 2;; # X11 NVIDEA video-driver
+						"'NVIDIA Corporation'") return 2;; # X11 NVIDEA video-driver
 						'') ;;	 
 						*) return 5 ;;	# This video card is not supportet 
 					esac
