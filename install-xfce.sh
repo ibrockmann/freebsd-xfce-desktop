@@ -2,7 +2,7 @@
 
 #============================================================================
 # Install Xfce 4.16 Desktop on FreeBSD 13.0
-# by ibrockmann, Version: 2021-04-18
+# by ibrockmann, Version: 2021-04-28
 # 
 # Notes: Installation of Xfce 4.16 Desktop Environment with Matcha and 
 #  Arc GTK Themes on FreeBSD 13.0
@@ -425,13 +425,14 @@ fetch_wallpaper () {
 	if [ -d $DIR ]; then
 		cd /usr/local/share/backgrounds/
 			
-		# ------------ fetch does not work in privat github repository --------
-		#fetch --no-verify-peer https://github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mount_Fitz_Roy_1920x1080.jpg
+		# --------------------- fetch favorite wallpaper ----------------------
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/Mountain_1920x1080.jpg${COLOR_NC} from gitgub...\n"
+		fetch --no-verify-peer https://github.com/ibrockmann/freebsd-xfce-desktop/blob/main/wallpaper/Mount_Fitz_Roy_1920x1080.jpg
 	
 		# ----------- use curl instead of fetch ------------------------------
-		install_packages curl
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/Mountain_1920x1080.jpg${COLOR_NC} from gitgub...\n"
-		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/Mount_Fitz_Roy_1920x1080.png
+		#install_packages curl
+		
+		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/Mount_Fitz_Roy_1920x1080.png
 	else
 		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
 	fi	
@@ -607,39 +608,39 @@ set_lightdm_greeter () {
 		cd /usr/local/share/backgrounds/
 		
 		
-		# ------------ fetch does not work in privat github repository -------- 
+		# ------------------- fetch lock screen wallpapers --------------------
 		
-		#fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-blue.png
-		#chmod 644 FreeBSD-lockscreen_v1-blue.png
-		#fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-red.png
-		#chmod 644 FreeBSD-lockscreen_v1-red.png
+		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-blue.png
+		chmod 644 FreeBSD-lockscreen_v1-blue.png
+		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-red.png
+		chmod 644 FreeBSD-lockscreen_v1-red.png
 		
-		#fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-blue.png
-		#chmod 644 FreeBSD-lockscreen_v2-blue.png
-		#fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-red.png
-		#chmod 644 FreeBSD-lockscreen_v2-red.png
+		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-blue.png
+		chmod 644 FreeBSD-lockscreen_v2-blue.png
+		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-red.png
+		chmod 644 FreeBSD-lockscreen_v2-red.png
 		
-		#fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-blue.png
-		#chmod 644 FreeBSD-lockscreen_v3-blue.png
-		#fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-red.png
-		#chmod 644 FreeBSD-lockscreen_v3-red.png
+		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-blue.png
+		chmod 644 FreeBSD-lockscreen_v3-blue.png
+		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-red.png
+		chmod 644 FreeBSD-lockscreen_v3-red.png
 		
 				
-		# ----------- user curl instead of fetch ------------------------------
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v1-blue.png${COLOR_NC} from gitgub...\n"
-		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-blue.png
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v1-red.png${COLOR_NC} from gitgub...\n"
-		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-red.png
+		# ----------- use curl instead of fetch ------------------------------
+		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v1-blue.png${COLOR_NC} from gitgub...\n"
+		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-blue.png
+		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v1-red.png${COLOR_NC} from gitgub...\n"
+		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-red.png
 		
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v2-blue.png${COLOR_NC} from gitgub...\n"
-		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-blue.png
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v2-red.png${COLOR_NC} from gitgub...\n"
-		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-red.png
+		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v2-blue.png${COLOR_NC} from gitgub...\n"
+		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-blue.png
+		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v2-red.png${COLOR_NC} from gitgub...\n"
+		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-red.png
 		
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v3-blue.png${COLOR_NC} from gitgub...\n"
-		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-blue.png
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v3-red.png${COLOR_NC} from gitgub...\n"
-		curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-red.png	
+		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v3-blue.png${COLOR_NC} from gitgub...\n"
+		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-blue.png
+		#printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/FreeBSD-lockscreen_v3-red.png${COLOR_NC} from gitgub...\n"
+		#curl -s -O https://ca49b3326d738856a8bbbfbe11b93f30675f6071@raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-red.png	
 		
 	else
 		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
