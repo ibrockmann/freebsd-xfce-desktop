@@ -795,7 +795,7 @@ install_utilities () {
 		install_packages file-roller
 	fi
 	
-		if [ "$INSTALL_GLANCES" -eq 1 ]; then
+	if [ "$INSTALL_GLANCES" -eq 1 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}cross-platform monitoring tool glances${COLOR_NC}...\n"
 		install_packages py37-glances
 	fi
