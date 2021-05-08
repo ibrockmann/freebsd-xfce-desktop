@@ -994,6 +994,8 @@ install_packages thunar-archive-plugin
 printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Weather plugin for the Xfce panel${COLOR_NC}...\n"
 install_packages xfce4-weather-plugin
 
+# --------------- xfce4-mixer not supported therefore install BSDMixer --------
+install_packages dsbmixer
 
 # ------------------------------------ install Matcha and Arc themes ---------
 printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XFCE GTK themes: Matcha and Arc${COLOR_NC}...\n"
