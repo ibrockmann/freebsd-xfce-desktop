@@ -2,7 +2,7 @@
 
 #============================================================================
 # Install Xfce 4.16 Desktop on FreeBSD 13.0
-# by ibrockmann, Version: 2021-04-28
+# by ibrockmann, Version: 1.0
 # 
 # Notes: Installation of Xfce 4.16 Desktop Environment with Matcha and 
 #  Arc GTK Themes on FreeBSD 13.0
@@ -12,7 +12,7 @@
 # When using VMware, Screen size variable muste be set to your needs.
 # Default: 2560x1440
 #
-# Applications: Audacious, Catfish, Chromium, doas, Gimp, htop, KeePass,
+# Applications: Audacious, Catfish, doas, Firefox, Gimp, htop, KeePass,
 # LibreOffice, lynis, mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel,
 # sysinfo, Thunderbird, VIM, VLC
 #
@@ -84,8 +84,8 @@ clear
 printf "${COLOR_CYAN}Installation of Xfce Desktop Environment for FreeBSD 13.0${COLOR_NC}\n\n"
 printf "This script will install pkg, X11 and the Xfce Desktop Environment with Matcha and\n"
 printf "Arc GTK Themes.\n" 
-printf "Additionally some basic applications will be installed: Audacious, Catfish, Chromium,\n"
-printf "doas, Gimp, htop, KeePass, LibreOffice, lynis , mpv, neofetch, OctoPkg, Ristretto,\n"
+printf "Additionally some basic applications will be installed: Audacious, Catfish, doas,\n"
+printf "Firefox, Gimp, htop, KeePass, LibreOffice, lynis , mpv, neofetch, OctoPkg, Ristretto,\n"
 printf "rkhunter, Shotweel, Sysinfo, Thunderbird, Vim, VLC.\n" 
 printf "Install script supports current nvidia FreeBSD (X64) and VMware display drivers.\n"
 printf "When using VMware, Screen size variable muste be set to your needs. Default: 2560x1440\n"
@@ -897,8 +897,8 @@ INSTALL_GIMP=$?
 
 
 #  ----------------------------------- internet & cloud -----------------------
-yes_no "Install Chromium (Chrome web browser)?"
-INSTALL_CHROMIUM=$?
+yes_no "Install Firefox (Mozilla's web browser)?"
+INSTALL_BROWSER=$?
 
 
 #  ----------------------------------- mulitmedia -----------------------------
@@ -1029,13 +1029,13 @@ install_gimp () {
 install_gimp
 
 
-install_chromium () {
-	if [ "$INSTALL_CHROMIUM" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Chromium${COLOR_NC}...\n"
-		install_packages chromium
+install_browser () {
+	if [ "$INSTALL_BROWSER" -eq 0 ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Firefox${COLOR_NC}...\n"
+		install_packages firefox
 	fi
 }
-install_chromium
+install_browser
 
 
 install_multimedia () {
@@ -1120,10 +1120,10 @@ daily_check_for_updates
 enable_ipfw_firewall
 
 #Some FreeBSD security settings (not entirely!)
-#system_hardening
+system_hardening
 
 # ------------------------ Intel and AMD CPUs microcode updates ---------------
-#install_cpu_microcode_updates
+install_cpu_microcode_updates
 
 # --------------------------- silence the boot messages -----------------------
 silent_boot_messages 
