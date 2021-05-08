@@ -280,8 +280,8 @@ install_packages() {
 for PACKAGENAME in $*
 do
 		if pkg search -L name $PACKAGENAME | cut -w -f1 | grep -x -q $PACKAGENAME; then #Check if FreeBSd package vorhanden
-			#pkg install -y $PACKAGENAME
-			pkg install $PACKAGENAME
+			pkg install -y $PACKAGENAME
+			#pkg install $PACKAGENAME
 		else
 			printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] pkg: No packages available to install matching ${COLOR_CYAN}"$PACKAGENAME"${COLOR_NC}!\n"
 	fi
@@ -1120,17 +1120,19 @@ daily_check_for_updates
 enable_ipfw_firewall
 
 #Some FreeBSD security settings (not entirely!)
-system_hardening
+#system_hardening
 
 # ------------------------ Intel and AMD CPUs microcode updates ---------------
-install_cpu_microcode_updates
+#install_cpu_microcode_updates
 
 # --------------------------- silence the boot messages -----------------------
 silent_boot_messages 
 
-#Specify the maximum desired resolution for	the EFI	console.
-#/boot/loader.conf
-#sysrc -f /boot/loader.conf efi_max_resolution="1920x1080"
+
+# -------------- Specify the maximum desired resolution for the EFI	console ---
+/boot/loader.conf
+sysrc -f /boot/loader.conf efi_max_resolution=$SCREEN_SIZE
+
 
 # ------------------------------------ reboot FreeBSD --------------------------
 # -----------------------------------------------------------------------------
