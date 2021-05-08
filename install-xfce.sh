@@ -14,7 +14,7 @@
 #
 # Applications: Audacious, Catfish, doas, Glances, GNOME Archive manager,
 # Firefox, Gimp, htop, KeePass, LibreOffice, lynis, mpv, neofetch, OctoPkg,
-# Ristretto, rkhunter, Shotweel, sysinfo, Thunderbird, VIM, VLC
+# Ristretto, rkhunter, Shotweel, sysinfo, Thunderbird, VIM, VLC.
 #
 # Language and country code is set to German. It can be changed to your need in
 # User defined variables section.

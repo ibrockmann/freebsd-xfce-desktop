@@ -5,7 +5,7 @@ This script installs a Xfce 4.16 desktop environment with Arc and Matcha Gtk The
 Display drivers: Only the current nvidia (440.xx series) and VMware display drivers are supported. When VMware is used, the screen size variable must be set to your needs.
 Default: 2560x1440
 
-Applications: Audacious, Catfish, Gimp, Firefox, htop, KeePass, LibreOffice, lynis, mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, sysinfo, Thunderbird, VIM, VLC.
+Applications: Audacious, Catfish, doas, Glances, GNOME Archive manager, Firefox, Gimp, htop, KeePass, LibreOffice, lynis, mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, sysinfo, Thunderbird, VIM, VLC.
 
 Language and country code is set to German. It can be changed to your need in
 the user defined variables section.
