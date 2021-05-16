@@ -405,8 +405,7 @@ case $VGA_CARD in
 		
 		# ---- update rc.conf,nvidia drivers - to load the kernel modules at boot ---
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/etc/rc.conf${COLOR_NC}\n"
-		#sysrc linux_enable="YES"			
-		sysrc kld_list+="nvidia-modeset linux"
+		sysrc kld_list+="nvidia-modeset"
 		
 		# --- nvidia drivers has been build with Linux compatibility support --------
 		# therefore the linux.ko module is needed and can be loaded via 
