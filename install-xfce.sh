@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #============================================================================
-# Install Xfce 4.16 Desktop on FreeBSD 13.0
+# Install Xfce 4.16 Desktop on FreeBSD 12.2, 13.0
 # by ibrockmann, Version: 1.0
 # 
 # Notes: Installation of Xfce 4.16 Desktop Environment with Matcha and 
@@ -13,7 +13,7 @@
 # Default: 2560x1440
 #
 # Applications: Audacious, Catfish, doas, Glances, GNOME Archive manager,
-# Firefox, Gimp, htop, KeePass, LibreOffice, lynis, mpv, neofetch, OctoPkg,
+# Firefox, Gimp, htop, KeePassXC, LibreOffice, lynis, mpv, neofetch, OctoPkg,
 # Ristretto, rkhunter, Shotweel, sysinfo, Thunderbird, VIM, VLC.
 #
 # Language and country code is set to German. It can be changed to your need in
@@ -86,7 +86,7 @@ printf "${COLOR_CYAN}Installation of Xfce Desktop Environment for FreeBSD 13.0${
 printf "This script will install pkg, X11 and the Xfce Desktop Environment with Matcha and\n"
 printf "Arc GTK Themes.\n" 
 printf "Additionally some basic applications will be installed: Audacious, Catfish, doas,\n"
-printf "Firefox, Glances, GNOME Archive manager, Gimp, htop, KeePass, LibreOffice, lynis,\n"
+printf "Firefox, Glances, GNOME Archive manager, Gimp, htop, KeePassXC, LibreOffice, lynis,\n"
 printf "mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, Sysinfo, Thunderbird\n"
 printf "Vim, VLC.\n" 
 printf "Install script supports current nvidia FreeBSD (X64) and VMware display drivers.\n"
@@ -926,7 +926,7 @@ INSTALL_CUPS=$?				# CUPS is a standards-based, open source printing system
 
 
 #  ----------------------------------- security -------------------------------
-yes_no "Install KeePass (easy-to-use password manager)?"
+yes_no "Install KeePassXC (easy-to-use password manager)?"
 INSTALL_KEEPASS=$?
 
 #  ----------------------------------- utilities -------------------------------
@@ -1104,8 +1104,8 @@ install_mail
 
 install_keepass () {
 	if [ "$INSTALL_KEEPASS" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Keepass${COLOR_NC}...\n"
-		install_packages keepass
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}KeePassXC${COLOR_NC}...\n"
+		install_packages keepassxc
 	fi
 }
 install_keepass
