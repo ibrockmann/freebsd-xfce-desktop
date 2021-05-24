@@ -968,10 +968,10 @@ sysrc moused_enable="YES"
 install_video_driver
 
 
-# ------------------------- install xfce4, lightdm, xdg-user-dirs -------------
+# ------------------------- install xfce4, lightdm + i3lock, xdg-user-dirs -------------
 printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XFCE Desktop Environment with LightDM GTK+ Gretter.${COLOR_NC}...\n"
-# pkg install -y xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings
-install_packages xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings
+# pkg install -y xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings i3lock
+install_packages xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings i3lock
 
 # ------------------------------------ update rc.conf -------------------------
 # ------------------------------------ start lightdm --------------------------
