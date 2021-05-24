@@ -12,9 +12,9 @@
 # When using VMware, Screen size variable muste be set to your needs.
 # Default: 2560x1440
 #
-# Applications: Audacious, Catfish, doas, Glances, GNOME Archive manager,
-# Firefox, Gimp, htop, KeePassXC, LibreOffice, lynis, mpv, neofetch, OctoPkg,
-# Ristretto, rkhunter, Shotweel, sysinfo, Thunderbird, VIM, VLC.
+# Applications: Audacious, Catfish, doas, Glances, GNOME Archive manager with
+# 7-Zip, Firefox, Gimp, htop, KeePassXC, LibreOffice, lynis, mpv, neofetch, 
+# OctoPkg, Ristretto, rkhunter, Shotweel, sysinfo, Thunderbird, VIM, VLC.
 #
 # Language and country code is set to German. It can be changed to your need in
 # User defined variables section.
@@ -49,7 +49,7 @@ INSTALL_CATFISH=1				# Catfish is a GTK based search utility
 INSTALL_DOAS=1					# Simple sudo alternative to run commands as another user
 INSTALL_GLANCES=1				# Glances is a cross-platform monitoring tool
 INSTALL_HTOP=1					# Better top - interactive process viewer
-INSTALL_FILE_ROLLER=1			# GNOME Archive manager (file-roller) for zip files, tar, etc
+INSTALL_FILE_ROLLER=1			# GNOME Archive manager (file-roller) + 7-Zip file archiver
 INSTALL_LYNIS=1					# Security auditing and hardening tool, for UNIX-based systems
 INSTALL_NEOFETCH=1				# Fast, highly customizable system info script
 INSTALL_OCTOPKG=1				# Graphical front-end to the FreeBSD pkg-ng package manager
@@ -86,8 +86,8 @@ printf "${COLOR_CYAN}Installation of Xfce Desktop Environment for FreeBSD 13.0${
 printf "This script will install pkg, X11 and the Xfce Desktop Environment with Matcha and\n"
 printf "Arc GTK Themes.\n" 
 printf "Additionally some basic applications will be installed: Audacious, Catfish, doas,\n"
-printf "Firefox, Glances, GNOME Archive manager, Gimp, htop, KeePassXC, LibreOffice, lynis,\n"
-printf "mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, Sysinfo, Thunderbird\n"
+printf "Firefox, Glances, GNOME Archive manager with 7-Zip, Gimp, htop, KeePassXC, LibreOffice,\n"
+printf "lynis, mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, Sysinfo, Thunderbird,\n"
 printf "Vim, VLC.\n" 
 printf "Install script supports current nvidia FreeBSD (X64) and VMware display drivers.\n"
 printf "When using VMware, Screen size variable muste be set to your needs. Default: 2560x1440\n"
@@ -791,7 +791,7 @@ install_utilities () {
 	
 	if [ "$INSTALL_FILE_ROLLER" -eq 1 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Archive manager for zip files, tar, etc${COLOR_NC}...\n"
-		install_packages file-roller
+		install_packages file-roller p7zip
 	fi
 	
 	if [ "$INSTALL_GLANCES" -eq 1 ]; then
