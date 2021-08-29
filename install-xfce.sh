@@ -7,8 +7,8 @@
 # Notes: Installation of Xfce 4.16 Desktop Environment with Matcha and 
 #  Arc GTK Themes on FreeBSD 13.0
 #
-# Display driver: Script supports onyl current nvidia (440.xx series) and VMware
-#  display driver
+# Display driver: Script supports current nvidia (440.xx series) and VMware
+#  display driver only
 # When using VMware, Screen size variable muste be set to your needs.
 # Default: 2560x1440
 #
@@ -29,10 +29,10 @@
 # ---------------------- adapt variables to your needs -------------------------
 
 # Language and Country Code, Keyboard layout, Charset
-LOCALE='de_DE.UTF-8' 		     # LanguageCode_CountryCode.Encoding, a complete list can be found by typing: % locale -a  | more
+LOCALE='de_DE.UTF-8' 		     # LanguageCode_CountryCode. Encoding, a complete list can be found by typing: % locale -a  | more
 ACCOUNT_TYPE='german|German'     # Language name|Account Type Description, environment variables login.conf
 KEYBOARD_LAYOUT='de'			 # Keyboard layouts and other adjustable parameters are listed in man page xkeyboard-config(7).
-SCREEN_SIZE='2560x1440'			 # Only required if VMWare is used.
+SCREEN_SIZE='2560x1440'			 # Required for VMWare and used for the EFI console
 
 #ipfw  Firewall
 FIREWALL_MYSERVICES='22/tcp'				# list of services, separated by spaces, that should be accessible on your pc  
@@ -281,9 +281,8 @@ set_login_class () {
 install_packages() {
 for PACKAGENAME in $*
 do
-		if pkg search -L name $PACKAGENAME | cut -w -f1 | grep -x -q $PACKAGENAME; then #Check if FreeBSd package vorhanden
+		if pkg search -L name $PACKAGENAME | cut -w -f1 | grep -x -q $PACKAGENAME; then #Check if FreeBSD package available
 			pkg install -y $PACKAGENAME
-			#pkg install $PACKAGENAME
 		else
 			printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] pkg: No packages available to install matching ${COLOR_CYAN}"$PACKAGENAME"${COLOR_NC}!\n"
 	fi
@@ -403,14 +402,10 @@ case $VGA_CARD in
 		# run nvidia autoconfig
 		nvidia-xconfig
 		
-		# ---- update rc.conf,nvidia drivers - to load the kernel modules at boot ---
+		# ---- update rc.conf, nvidia drivers - to load the kernel modules at boot ---
+		# linux.ko and nvidia.ko will be loaded as dependency of nvidia-modeset.ko
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/etc/rc.conf${COLOR_NC}\n"
-		sysrc kld_list+="nvidia-modeset"
-		
-		# --- nvidia drivers has been build with Linux compatibility support --------
-		# therefore the linux.ko module is needed and can be loaded via 
-		# /boot/loader.conf, or later in the boot process if you add linux_enable="YES" to your /etc/rc.conf.
-		sysrc linux_enable="YES";;
+		sysrc kld_list+="nvidia-modeset";;
 			 
 	*) printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] Only NVIDEA graphics cards or installation on VMWare is supportet!\n"
 	exit 1;;
@@ -622,10 +617,7 @@ set_lightdm_greeter () {
 		chmod 644 FreeBSD-lockscreen_v3-blue.png
 		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-red.png
 		chmod 644 FreeBSD-lockscreen_v3-red.png
-		
 				
-	
-		
 	else
 		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
 	fi	
@@ -969,7 +961,7 @@ install_video_driver
 
 
 # ------------------------- install xfce4, lightdm + i3lock, xdg-user-dirs -------------
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XFCE Desktop Environment with LightDM GTK+ Gretter.${COLOR_NC}...\n"
+printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XFCE Desktop Environment with LightDM GTK+ Greeter.${COLOR_NC}...\n"
 # pkg install -y xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings i3lock
 install_packages xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings i3lock
 
@@ -1117,7 +1109,6 @@ if [ "$INSTALL_UTILITIES" -eq 0 ]; then
 fi
 
 
-
 # -----------------------------------------------------------------------------
 # ----------------------- Post installation tasks -----------------------------
 
@@ -1137,9 +1128,9 @@ install_cpu_microcode_updates
 silent_boot_messages 
 
 
-# -------------- Specify the maximum desired resolution for the EFI	console ---
-/boot/loader.conf
+# -------------- Specify the maximum desired resolution for the EFI console ---
 sysrc -f /boot/loader.conf efi_max_resolution=$SCREEN_SIZE
+
 
 
 # ------------------------------------ reboot FreeBSD --------------------------
