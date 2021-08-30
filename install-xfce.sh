@@ -788,7 +788,7 @@ install_utilities () {
 	
 	if [ "$INSTALL_GLANCES" -eq 1 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}cross-platform monitoring tool glances${COLOR_NC}...\n"
-		install_packages py37-glances
+		install_packages py38-glances
 	fi
 		
 	if [ "$INSTALL_HTOP" -eq 1 ]; then
