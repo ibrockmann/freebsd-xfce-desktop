@@ -60,3 +60,5 @@ This project is licensed under the BSD 3 License - See ``LICENSE`` for more info
 ## Acknowledgments
 
 [kamila.is](https://kamila.is/making/freebsd-wallpapers/) for the FreeBSD/Beastie wallpapers
+
+Inspired by [broozar's](https://github.com/broozar/installDesktopFreeBSD)  desktop install script for FreeBSD

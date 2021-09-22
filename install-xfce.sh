@@ -245,7 +245,7 @@ set_login_class_all () {
 	if yes_no "Change language settings (language code, country code and encoding) for ${COLOR_CYAN}ALL${COLOR_NC} users to ${COLOR_CYAN}${COUNTRY_CODE}${COLOR_NC} (${ACCOUNT})?"; then
 		for i in `awk -F: '($3 >= 1001) && ($3 != 65534) { print $1 }' /etc/passwd`; 
 		do 
-			pw usermod -n $i -L `echo $ACCOUNT |tr "[:upper:]" "[:lower:]"` 2>&1 | awk -v yellow=$COLOR_YELLOW -v nc=$COLOR_NC '{print "[ "yellow "WARNING" nc" ]  "$0}'
+			pw usermod -n $i -L `echo ${ACCOUNT} | tr "[:upper:]" "[:lower:]"` 2>&1 | awk -v yellow=$COLOR_YELLOW -v nc=$COLOR_NC '{print "[ "yellow "WARNING" nc" ]  "$0}'
 			pw usershow $i | awk -v nc=$COLOR_NC -v cyan=$COLOR_CYAN  -v green=$COLOR_GREEN -F: '{printf "[ "green "INFO" nc " ]  Login Name: "$1"\tHome: "$9"\t"cyan"Class: "$5 nc"\tShell: "$10"\n"}'  
 		done
 		return 0
