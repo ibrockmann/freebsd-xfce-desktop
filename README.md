@@ -1,43 +1,39 @@
 # FreeBSD Dektop with Xfce
 
-This script installs a Xfce 4.16 desktop environment with Arc and Matcha Gtk Themes on FreeBSD 12.2, 13.0
+This script installs a Xfce 4.16 desktop environment with Arc and Matcha Gtk themes on FreeBSD 13.x
 
-Display drivers: Only the current nvidia (440.xx series) and VMware display drivers are supported. When VMware is used, the screen size variable must be set to your needs.
+Display drivers: Only the current nvidia FreeBSD (X64) and VMware display drivers are supported. When VMware is used, the screen size variable must be set to your needs.
 Default: 2560x1440
 
-Applications: Audacious, Catfish, doas, Glances, GNOME Archive manager, Firefox, Gimp, htop, KeePassXC, LibreOffice, lynis, mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, sysinfo, Thunderbird, VIM, VLC.
-
-Language and country code is set to German. It can be changed to your need in
-the user defined variables section.
+Applications: Audacious, Catfish,  Chromium, doas, Glances, GNOME Archive manager, Firefox, Gimp, htop, KeePassXC, LibreOffice, lynis, mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, sysinfo, Thunderbird, VIM, VLC.
 
 
 
 ## Getting Started
 
-It is recommended that you start with a clean installation of FreeBSD 13.0 64-bit. Your user account should belong to the operator and wheel group so that administrative tasks can be performed.
+It is recommended that you start with a clean installation of FreeBSD 13.1 64-bit. If a user account already exists it should belong to the operator and wheel group so that administrative tasks can be performed. In addition a user account can be created during the installation of the FreeBSD Desktop environment.
 
 ### Prerequisites
 
-- Installation of FreeBSD 13.0-RELEASE-amd64
-- Display card: nvidea video card (440.xx series display driver) or installation on  VMWare
-- Regular user account that belong to the operator and wheel group
+- Installation of FreeBSD 13.1-RELEASE-amd64
+- Display card: nvidea video card (510.xx series display driver) or installation on VMWare
 
 ### Installing
 
-Log in with your user account in a clean FreeBSD installation and download the install script from github. Then change the file permissions so that the installation script can be executed:
+Log in as root or with your user account in a clean FreeBSD installation and download the install script from github. Then change the file permissions so that the installation script can be executed:
 
 ```
 $ fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/install-xfce.sh
 $ chmod u+x install-xfce.sh
 ```
 
-The install script must be run as root, therefore switch to root ([su](https://www.freebsd.org/cgi/man.cgi?query=su&apropos=0&sektion=0&manpath=FreeBSD+13.0-current&arch=default&format=html)) before you run it:
+The install script must be run as root, therefore switch to root ([su](https://www.freebsd.org/cgi/man.cgi?query=su&apropos=0&sektion=0&manpath=FreeBSD+13.0-current&arch=default&format=html)), if required before you run it:
 
 ```
-# ./install-xfce.sh | tee -a ./install-xfce.log
+# ./install-xfce.sh
 ```
 
-Follow the instructions on screen. If you made a mistake answering the questions, press  CTL+C to abort the script. Afterwards run it again.
+Follow the instructions on screen. If you made a mistake answering the questions, press  ETC to abort the script. Afterwards run it again.
 
 
 
@@ -56,6 +52,11 @@ The installation was only tested with the current nvidia drivers and under VMwar
 ## License
 
 This project is licensed under the BSD 3 License - See ``LICENSE`` for more information.
+
+## Change notes
+
+- 2022-07-23: New version of the freebsd- xfce-desktop install script using [dialog](https://www.freebsd.org/cgi/man.cgi?query=dialog&amp;sektion=1 Acknowledgments) (v2.0)
+- 2021-09-21: Initial release of the freebsd-xfce-desktop install script (v1.0)
 
 ## Acknowledgments
 

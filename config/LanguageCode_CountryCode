@@ -1,0 +1,80 @@
+# List of UTF-8 LanguageCode_CountryCode for FreeBSD
+# based on locale -a | grep UTF-8
+# rev. 2022-05-12, FreeBSD 13.1 release date
+af_ZA.UTF-8;Afrikaans;South Africa
+am_ET.UTF-8;Amharic;Ethiopia
+ar_AE.UTF-8;Arabic;United Arab Emirates
+ar_EG.UTF-8;Arabic;Egypt
+ar_JO.UTF-8;Arabic;Jordan
+ar_MA.UTF-8;Arabic;Morocco
+ar_QA.UTF-8;Arabic;Qatar
+ar_SA.UTF-8;Arabic;Saudi Arabia
+be_BY.UTF-8;Belarusian;Belarus
+bg_BG.UTF-8;Bulgarian;Bulgaria
+ca_AD.UTF-8;Catalan;Andorra
+ca_ES.UTF-8;Catalan;Spain
+ca_FR.UTF-8;Catalan;France
+ca_IT.UTF-8;Catalan;Italy
+cs_CZ.UTF-8;Czech;Czech Republic
+da_DK.UTF-8;Danish;Denmark
+de_AT.UTF-8;German;Austria
+de_CH.UTF-8;German;Switzerland
+de_DE.UTF-8;German;Germany
+el_GR.UTF-8;Greek;Greece
+en_AU.UTF-8;English;Australia
+en_CA.UTF-8;English;Canada
+en_GB.UTF-8;English;United Kingdom
+en_HK.UTF-8;English;Hong Kong SAR China
+en_IE.UTF-8;English;Ireland
+en_NZ.UTF-8;English;New Zealand
+en_PH.UTF-8;English;Philippines
+en_SG.UTF-8;English;Singapore
+en_US.UTF-8;English;US
+en_ZA.UTF-8;English;South Africa
+es_AR.UTF-8;Spanish;Argentina
+es_CR.UTF-8;Spanish;Costa Rica
+es_ES.UTF-8;Spanish;Spain
+es_MX.UTF-8;Spanish;Mexico
+et_EE.UTF-8;Estonian;Estonia
+eu_ES.UTF-8;Basque;Spain
+fi_FI.UTF-8;Finnish;Finland
+fr_BE.UTF-8;French;Belgium
+fr_CA.UTF-8;French;Canada
+fr_CH.UTF-8;French;Switzerland
+fr_FR.UTF-8;French;France
+ga_IE.UTF-8;Irish;Ireland
+he_IL.UTF-8;Hebrew;Israel
+hi_IN.UTF-8;Hindi;India
+hr_HR.UTF-8;Croatian;Croatia
+hu_HU.UTF-8;Hungarian;Hungary
+hy_AM.UTF-8;Armenian;Armenia
+is_IS.UTF-8;Icelandic;Iceland
+it_CH.UTF-8;Italian;Switzerland
+it_IT.UTF-8;Italian;Italy
+ja_JP.UTF-8;Japanese;Japan
+kk_KZ.UTF-8;Kazakh;Kazakhstan
+ko_KR.UTF-8;Korean;Korea
+lt_LT.UTF-8;Lithuanian;Lithuania
+lv_LV.UTF-8;Latvian;Latvia
+mn_MN.UTF-8;Macedonian;Macedonia
+nb_NO.UTF-8;Bokmal;Norway
+nl_BE.UTF-8;Dutch;Belgium
+nl_NL.UTF-8;Dutch;Netherlands
+nn_NO.UTF-8;Nynorsk;Norway
+pl_PL.UTF-8;Polish;Poland
+pt_BR.UTF-8;Portuguese;Brazil
+pt_PT.UTF-8;Portuguese;Portugal
+ro_RO.UTF-8;Romanian;Romania
+ru_RU.UTF-8;Russian;Russia
+se_FI.UTF-8;Sami;Finland
+se_NO.UTF-8;Sami;Norway
+sk_SK.UTF-8;Slovak;Slovakia
+sl_SI.UTF-8;Slovenian;Slovenia
+sr_RS.UTF-8;Serbian;Serbia
+sv_FI.UTF-8;Swedish;Finnland
+sv_SE.UTF-8;Swedish;Sweden
+tr_TR.UTF-8;Turkish;Turkey
+uk_UA.UTF-8;Ukrainian;Ukraine
+zh_CN.UTF-8;Chinese simplified;China
+zh_HK.UTF-8;Chinese traditional;Hong Kong SAR China
+zh_TW.UTF-8;Chinese traditional;Taiwan

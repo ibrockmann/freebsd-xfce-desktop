@@ -1,133 +1,694 @@
 #!/bin/sh
 
 #============================================================================
-# Install Xfce 4.16 Desktop on FreeBSD 12.2, 13.0
-# by ibrockmann, Version: 1.0
+# Installation of a Xfce 4.16 Desktop Environment for FreeBSD 13.x
+# by ibrockmann, Version: 2.0
 # 
-# Notes: Installation of Xfce 4.16 Desktop Environment with Matcha and 
-#  Arc GTK Themes on FreeBSD 13.0
+# Notes: Installation of an Xfce 4.16 Desktop Environment with Matcha and 
+#  Arc GTK Themes on FreeBSD 13.1
 #
-# Display driver: Script supports current nvidia (440.xx series) and VMware
+# Display driver: Script supports current nvidia FreeBSD (X64) and VMware
 #  display driver only
 # When using VMware, Screen size variable muste be set to your needs.
 # Default: 2560x1440
 #
-# Applications: Audacious, Catfish, doas, Glances, GNOME Archive manager with
-# 7-Zip, Firefox, Gimp, htop, KeePassXC, LibreOffice, lynis, mpv, neofetch, 
-# OctoPkg, Ristretto, rkhunter, Shotweel, sysinfo, Thunderbird, VIM, VLC.
+# Applications: Audacious, Catfish, Chromium, doas, Firefox, Gimp, Glances,
+# GNOME Archive manager with 7-Zip, htop, KeePassXC, LibreOffice, lynis, 
+# mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, Syncthing, sysinfo,
+# Thunderbird, VIM, VLC. 
 #
-# Language and country code is set to German. It can be changed to your need in
-# User defined variables section.
+# Script should be run on a fresh installed FreeBSD system.
 #
-#============================================================================
+#==============================================================================
 
 
 # ---------------------------------- declaration of variables -----------------
 # -----------------------------------------------------------------------------
 
 # ---------------------- User defined environment variables -------------------
-# ---------------------- adapt variables to your needs -------------------------
 
-# Language and Country Code, Keyboard layout, Charset
-LOCALE='de_DE.UTF-8' 		     # LanguageCode_CountryCode. Encoding, a complete list can be found by typing: % locale -a  | more
-ACCOUNT_TYPE='german|German'     # Language name|Account Type Description, environment variables login.conf
-KEYBOARD_LAYOUT='de'			 # Keyboard layouts and other adjustable parameters are listed in man page xkeyboard-config(7).
-SCREEN_SIZE='2560x1440'			 # Required for VMWare and used for the EFI console
+# Logfile  
+LOGFILE=$(pwd)"/"$(basename $0 sh)"log" 
 
-#ipfw  Firewall
-FIREWALL_MYSERVICES='22/tcp'				# list of services, separated by spaces, that should be accessible on your pc  
-FIREWALL_ALLOWSERVICE='192.168.178.0/24'	# List of IPs which has access to clients that should be allowed to access the provided services. Use keyword "any" instead of IP range when any clients should access these services
+SCREEN_SIZE='2560x1440'	# Required for VMWare and used for the EFI console			
 
 # Delay in seconds before autobooting FreeBSD
-AUTOBOOTDELAY='5'				
+AUTOBOOTDELAY='5'
 
-
-# ---------------------------------- utilities -------------------------------
-# ---- 1 - utility will be installed ---- 0 - utility will NOT be installed --
-
-INSTALL_CATFISH=1				# Catfish is a GTK based search utility
-INSTALL_DOAS=1					# Simple sudo alternative to run commands as another user
-INSTALL_GLANCES=1				# Glances is a cross-platform monitoring tool
-INSTALL_HTOP=1					# Better top - interactive process viewer
-INSTALL_FILE_ROLLER=1			# GNOME Archive manager (file-roller) + 7-Zip file archiver
-INSTALL_LYNIS=1					# Security auditing and hardening tool, for UNIX-based systems
-INSTALL_NEOFETCH=1				# Fast, highly customizable system info script
-INSTALL_OCTOPKG=1				# Graphical front-end to the FreeBSD pkg-ng package manager
-INSTALL_RKHUNTER=1				# Rootkit detection tool
-INSTALL_SYSINFO=1				# Utility used to gather system configuration information
+# Initialize values for language and country code, keyboard layout, Charset
+LOCALE='de_DE.UTF-8'	# LanguageCode_CountryCode.Encoding;set default to German, Germany, UTF-8
+			# A complete list can be found by typing: % locale -a  | more
+			# default-item in function menubox_language	
 
 INSTALL_CPU_MICROCODE_UPDATES=0	# Install Intel and AMD CPUs microcode updates and load updates automatically on a FreeBSD system startup
+
 # -----------------------------------------------------------------------------
 # --------------------- Do not change anything from here on -------------------
 # -----------------------------------------------------------------------------
 
 # environment variables
-PAGER=cat #used by freebsd-update, instead of PAGER=less
+
+# Github Repository
+#GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main
+GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/dialog
+
+# Default items for diaog boxes
+BACKTITLE="Installation of a Xfce Desktop Environment for FreeBSD 13.x"
+
+LANGUAGE_NAME=''			# System localization in /etc/login.conf: language_name|Account Type Description
+CHARSET=''		 
+
+
+KEYBOARD_LAYOUT=''			# Initialize keyboard layout, is set in function menubox_xkeyboard  
+					# Keyboard layouts and other adjustable parameters are listed in man page xkeyboard-config(7).
+KEYBOARD_VARIANT='default'		# Initialize keyboard variant, e.g. Dvorak, Macintosh, No dead keys		
+
+PAGER=cat				# used by freebsd-update, instead of PAGER=less
 export PAGER
 
 # define colors
-COLOR_NC='\033[0m' #No Color
+COLOR_NC='\033[0m' 			# No Color
 COLOR_RED='\033[0;31m'
 COLOR_GREEN='\033[0;32m'
 COLOR_YELLOW='\033[1;33m'
 COLOR_BLUE='\033[1;34m'
 COLOR_CYAN='\033[0;36m'
 
-# --------------- initialization: account type, charset and country code ------
-ACCOUNT=`echo $ACCOUNT_TYPE | cut -d '|' -f2`				# e.g. German
-CHARSET=`echo $LOCALE | cut -d . -f2` 						# Charset
-COUNTRY_CODE=`echo $LOCALE | cut -d . -f1 | cut -d _ -f2`	# Country_Code
+
+# --------------------- Define the dialog exit status codes -------------------
+
+: "${DIALOG=dialog}"
+
+: "${DIALOG_OK=0}"
+: "${DIALOG_CANCEL=1}"
+: "${DIALOG_HELP=2}"
+: "${DIALOG_EXTRA=3}"
+: "${DIALOG_ITEM_HELP=4}"
+: "${DIALOG_TIMEOUT=5}"
+: "${DIALOG_ESC=255}"
+
+: "${SIG_NONE=0}"
+: "${SIG_HUP=1}"
+: "${SIG_INT=2}"
+: "${SIG_QUIT=3}"
+: "${SIG_KILL=9}"
+: "${SIG_TERM=15}"
 
 
-# ------------------------------------ greeting -------------------------------
-install_xfce_greeter () {
-clear
-printf "${COLOR_CYAN}Installation of Xfce Desktop Environment for FreeBSD 13.0${COLOR_NC}\n\n"
-printf "This script will install pkg, X11 and the Xfce Desktop Environment with Matcha and\n"
-printf "Arc GTK Themes.\n" 
-printf "Additionally some basic applications will be installed: Audacious, Catfish, doas,\n"
-printf "Firefox, Glances, GNOME Archive manager with 7-Zip, Gimp, htop, KeePassXC, LibreOffice,\n"
-printf "lynis, mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, Sysinfo, Thunderbird,\n"
-printf "Vim, VLC.\n" 
-printf "Install script supports current nvidia FreeBSD (X64) and VMware display drivers.\n"
-printf "When using VMware, Screen size variable muste be set to your needs. Default: 2560x1440\n"
-printf "Language and country code is set to German.\n"
-printf "It can be changed to your need in the 'User defined environment variables' section.\n"
-printf "\nIf you made a mistake answering the questions, you can quit out of the installer\n"
-printf "by pressing ${COLOR_CYAN}CTRL+C${COLOR_NC} and then start again.\n\n"
+# --------------------- IPFW firewall -------------------
+FIREWALL_ENABLE="" # Not enabled by default 
+
+# ---------------------------------- setup-tempfiles --------------------
+tempfile=`(tempfile) 2>/dev/null` || tempfile=/tmp/temp.$$
+input=`tempfile 2>/dev/null` || input=/tmp/input.$$
+trap "rm -f $input $tempfile" 0 $SIG_NONE $SIG_HUP $SIG_INT $SIG_QUIT $SIG_TERM
+
+
+# ------------------------------------ Display date ---------------------------
+display_date () {
+	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  `date` \n"
 }
 
 
-# ------------------------------------ preconditions ----------------------------
+# ------------------------------------ preconditions --------------------------
 check_if_root () {
 	if [ "$(id -u)" -ne 0 ]; then
-		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]  This script must run as ${COLOR_CYAN}root${COLOR_NC}!\n\n"
+		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]  This script must run as ${COLOR_CYAN}root${COLOR_NC}!\n"
+		printf "Installation aborted.\n"
 		exit 1
 	fi
-	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Running script ${COLOR_CYAN}$0${COLOR_NC} as root\n"
-}
-
-
-display_system_info () {
-printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  OS: $(uname -mrs)\n"
+	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Running script ${COLOR_CYAN}$0${COLOR_NC} as root.\n"
 }
 
 
 check_network () {
 	if nc -zw1 8.8.8.8 443 > /dev/null 2>&1 ; then # Google DNS
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Internet connection detected\n"
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Internet connection detected.\n"
 	else
-		printf "[ ${COLOR_YELLOW}WARNING${COLOR_NC} ]  Could not verify internet connection!\n"
-		printf "[ ${COLOR_YELLOW}WARNING${COLOR_NC} ]  You must be online for this script to work!\n"
-		printf "[ ${COLOR_YELLOW}WARNING${COLOR_NC} ]  Proceed with caution ...\n\n"
+		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]  The system is not connected to the internet!\n"
+		printf "You must be online for this script to work!\n"
+		exit 1
 	fi
 }
 
 
-# ------------------------------------ pkg activation status check ----------------------------
+# ---------------------- Display system information ---------------------------
+display_system_info () {
+printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  OS: $(uname -mrs)\n"
+}
+
+
+# -------------------------- return values dialog buttons ---------------------
+msg_button () {
+# Report button-only, no $returntext
+
+	case ${returncode:-0} in
+		$DIALOG_OK)
+		  echo "OK";;
+		$DIALOG_CANCEL)
+		  printf "Installation aborted!\n"
+		  exit ;;
+		$DIALOG_HELP)
+		  echo "Help pressed.";;
+		$DIALOG_EXTRA)
+		  echo "Extra button pressed.";;
+		$DIALOG_ITEM_HELP)
+		  echo "Item-help button pressed.";;
+		$DIALOG_TIMEOUT)
+		  echo "Timeout expired.";;
+		$DIALOG_ERROR)
+		  echo "ERROR!";;
+		$DIALOG_ESC)
+		  printf "Installation aborted!\n"
+		  exit ;;
+		*)
+		  echo "Return code was $returncode";;
+esac
+}
+
+
+yesno () {
+
+	case ${returncode:-0} in
+  		$DIALOG_OK)
+    		  echo "YES";;
+  	  	$DIALOG_CANCEL)
+    		  echo "NO";;
+  	  	$DIALOG_HELP)
+    		  echo "Help pressed.";;
+  	  	$DIALOG_EXTRA)
+    		  echo "Extra button pressed.";;
+  		$DIALOG_ITEM_HELP)
+    		  echo "Item-help button pressed.";;
+  		$DIALOG_TIMEOUT)
+    		  echo "Timeout expired.";;
+  		$DIALOG_ERROR)
+    		  echo "ERROR!";;
+  		$DIALOG_ESC)
+    		  printf "Installation aborted!\n";;
+  		*)
+    		echo "Return code was $returncode";;
+esac
+}
+
+# ------------------------------------ Welcome message ------------------------
+msgbox_welcome () {
+
+	$DIALOG --clear --colors --backtitle "$BACKTITLE" \
+			--title "Welcome to the Xfce Desktop installer for FreeBSD" \
+			--msgbox "\nThis script will install pkg, X11 and the Xfce Desktop \
+Environment with Matcha and Arc GTK Themes. Additionally you have the \
+choise to install some basic applications:\n  \Z4Audacious, Catfish, \
+Chromium, doas, Firefox, Glances, GNOME Archive manager with 7-Zip, Gimp, \
+htop, KeePassXC, LibreOffice, lynis, mpv, neofetch, OctoPkg, Ristretto, \
+rkhunter, Shotweel, Syncthing, Sysinfo, Thunderbird, Vim, VLC.\Z0\n\n\
+This script supports the current nvidia FreeBSD (X64) and VMware display drivers. \
+When using VMware, Screen size variable muste be set to your needs.\n
+Default: 2560x1440" 18 70
+	
+	returncode=$?
+	msg_button
+}
+
+
+# ----------------------------------- user interaction -----------------------
+# ----------------------------------------------------------------------------
+
+menubox_language () {
+
+	# ----- fetch a list of UTF-8 language- and country codes for FreeBSD -----
+	cd /tmp
+	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode; then
+		
+		# NR>3: Skip first 3 lines from file
+		awk -F ';' 'NR>3 {printf "%s %s %s %s\n", "\""$1"\"", "\""$2, "|("$3")" "\"", "\"""lang="$1"\""}' /tmp/LanguageCode_CountryCode > $tempfile
+		sort -k 2 $tempfile | uniq > $input # remove duplicates
+
+		$DIALOG --clear --no-tags --item-help --backtitle "$BACKTITLE"\
+		--column-separator "|" \
+		--default-item "$LOCALE" \
+		--title "Common Language and Country Codes" \
+		--menu "
+		Please select the language you want to use with Xfce:" 20 70 15 \
+		--file $input 2> $tempfile
+
+		returncode=$?
+		msg_button 
+		LOCALE=`cat $tempfile`
+		
+		# awk search needs regular expression, you can't put /var/. Instead, use tilde: awk -v var="$var" '$0 ~ var'
+		LANGUAGE_NAME=`awk -v locale="$LOCALE" -F ';' '$1~locale {print $2}' /tmp/LanguageCode_CountryCode`
+	else
+		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]   Unable to fetch the list of UTF-8 language- and country codes from github!\n"
+		printf "Installation aborted.\n"
+		exit 1
+	fi
+}
+
+
+menubox_xkeyboard () {
+	
+	# ---------------------------------- local variables ----------------------
+	local country_code 
+	
+	# ----------------- fetch a list of  XKB data description files -----------
+
+	cd /tmp
+	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/xkeyboard_config; then
+		
+		# ----------------------- Keyboard layout -----------------------------
+		# Select ! layout paragraph from xkeyboard_layout file
+		# RS=''(Input record separator) has a special meaning to awk,
+		# it splits records on blank lines; Used to print paragraph 
+		
+		awk -v RS='' '/! layout/ {print}'  /tmp/xkeyboard_layout > $tempfile
+		awk  'NR>1 {out=$2; for(i=3;i<=NF;i++){out=out" "$i}; print $1, "\""out"\""}' $tempfile \
+			| sort -d -k 2 > $input
+
+
+		# Set default-item, based on Country_Code
+		country_code=`echo $LOCALE | cut -d . -f1 | cut -d _ -f2`	# Country_Code
+		KEYBOARD_LAYOUT=`echo $country_code | tr "[:upper:]" "[:lower:]"`
+
+		$DIALOG --clear --backtitle "$BACKTITLE" \
+		--default-item "$KEYBOARD_LAYOUT" \
+		--title "Keyboard Setup" \
+		--menu "
+		Please select your keyboard layout:" 20 70 15 \
+		--file $input 2> $tempfile
+		
+		returncode=$?
+		msg_button 
+		
+		KEYBOARD_LAYOUT=`cat $tempfile`
+
+		# ----------------------- Keyboard variant ----------------------------
+
+		# Select keyboard variants from xkeyboard_layout file
+		awk -v RS='' '/! variant/ {print}'  /tmp/xkeyboard_layout > $tempfile
+		
+		# Display only variants that match to keyboard layout
+		grep "${KEYBOARD_LAYOUT}:" $tempfile > $input
+
+		# Are there any keyboard variants?
+		if [ -s $input ]; then
+			$DIALOG --clear --defaultno --backtitle "$BACKTITLE" \
+					--title "Keyboard Setup" \
+        			--yesno "Use a special variant for the keyboard layout?\n\
+(e.g. Dvorak, Macintosh, No dead keys, ...)" 7 50
+			
+			returncode=$?
+			yesno
+			if [ $returncode -eq $DIALOG_OK ]; then
+				awk  '{out=$2; for(i=3;i<=NF;i++){out=out" "$i}; print $1, "\""out"\""}' $input > $tempfile
+				
+				$DIALOG --clear --backtitle "$BACKTITLE" \
+					--title "Keyboard Setup" \
+					--menu "
+					Please select your keyboard variant:" 20 70 15 \
+					--file $tempfile 2> $input
+				
+				returncode=$?
+				if [ $returncode -eq $DIALOG_CANCEL ]; then
+					menubox_xkeyboard
+				fi
+				msg_button
+				
+				KEYBOARD_VARIANT=`cat $input`
+			fi
+		fi
+	else
+		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]   Unable to fetch the list of UTF-8 language- and country codes from github!\n"
+		exit 1
+	fi
+}
+
+
+# -----------------------------------------------------------------------------
+# ------------- Selection of application & utlilitie packages -----------------
+# -----------------------------------------------------------------------------
+
+checklist_applications () {
+
+	APP_LIST=`$DIALOG --backtitle "$BACKTITLE" \
+		--title "Application selection"	\
+		--checklist "
+Please select the packages to be installed:" 20 70 15 \
+		"Audacious"	"An advanced audio player"			on  \
+		"Chromium" 	"Browser built by Google"                     	off \
+		"Firefox" 	"Mozilla's web browser"                     	on  \
+		"Gimp"     	"Free & open source image editor"           	off \
+		"LibreOffice" 	"Free Office Suite"                     	off \
+		"mpv"    	"Free media player for the command line" 	on  \
+		"KeePassXC"	"Cross-platform password manager"		on  \
+		"Ristretto"     "Image-viewer for the Xfce desktop environment" on  \
+		"Shotwell"    	"Personal photo manager" 			off \
+		"Syncthing"	"continuous file synchronization program"	on  \
+		"Thunderbird"	"Mozilla's free email client"  	         	on  \
+		"Vim"		"Improved version of the vi editor"		on  \
+		"VLC"    	"Free & open source multimedia player" 		off 3>&1 1>&2 2>&3`
+
+	returncode=$?
+	msg_button
+	
+	# Package names are in lower cases
+	APP_LIST=`echo $APP_LIST | tr "[:upper:]" "[:lower:]"`
+	exec 3>&- # close file descriptor 3 
+}
+
+
+checklist_utilities () {
+
+	UTILITY_LIST=`$DIALOG --clear --backtitle "$BACKTITLE" \
+			--title "Utility selection"	\
+			--checklist "
+Please select the packages to be installed:" 20 70 15 \
+			"Catfish"	"GTK based search utility"					on  \
+			"doas" 		"Simple sudo alternative to run commands as another user" 	on  \
+			"py39-glances" 	"Glances is a cross-platform monitoring tool"           	off \
+			"htop"     	"Better top - interactive process viewer"           		on  \
+			"File-roller"	"GNOME Archive manager + 7-Zip file archiver"			on  \
+			"Lynis"    	"Security auditing and hardening tool"			 	off \
+			"Neofetch"     	"Fast, highly customizable system info script"			on  \
+			"Octopkg"     	"Graphical front-end to the FreeBSD package manager" 		off \
+			"rkhunter"    	"Rootkit detection tool" 					off \
+			"Sysinfo"   	"Utility used to gather system configuration information"  	off 3>&1 1>&2 2>&3`
+
+	returncode=$?
+	msg_button
+	# Add 7-Zip package if file-roller is selected; Package names are in lower cases
+	UTILITY_LIST=`echo ${UTILITY_LIST} | sed 's/File-roller/File-roller 7-zip/' | tr "[:upper:]" "[:lower:]"`
+	exec 3>&- # close file descriptor 3
+}
+
+
+radiolist_repository_branch () {
+
+	REPOSITORY=`$DIALOG --clear --item-help --backtitle "$BACKTITLE" \
+	--title "Quarterly or latest package branches" \
+	--default-item "latest" \
+	--radiolist "
+Would you like to use the quarterly or latest version of FreeBSD packages?" 15 50 5 \
+	quarterly		""  off "More predictable and stable experience" \
+	latest			""  on "Current version of FreeBSD packages" 	\
+        3>&1 1>&2 2>&3`
+
+	returncode=$?
+	msg_button
+	exec 3>&- # close file descriptor 3
+}
+
+
+# ---------------------- Summary & abort installation ?  ----------------------
+yesno_summary () {
+
+	$DIALOG --clear --colors --backtitle "$BACKTITLE" \
+	--title "Installation summary" \
+	--no-label "Cancel" \
+	--yesno "\nIs everything below correct? Would you like to start the installation now?\n\
+Last change to cancel the installation!\n\n\
+Language:   \Z4$LANGUAGE_NAME\Z0\n\
+Keyboard:   \Z4$KEYBOARD_LAYOUT ($KEYBOARD_VARIANT)\Z0\n\
+LANG:       \Z4$LOCALE\Z0\n\
+Repository: \Z4$REPOSITORY\Z0\n\n\
+Applications: \Z4$APP_LIST\Z0\n\
+Utilities: \Z4$UTILITY_LIST\Z0\n\n\
+Installation Logfile: \Z4$LOGFILE\Z0\n\n" 20 80
+             
+	returncode=$?
+	msg_button
+}
+
+
+# -----------------------------------------------------------------------------
+# ------------------------- System hardening options --------------------------
+# -----------------------------------------------------------------------------
+
+checklist_system_hardening () {
+
+	local grep_return
+	
+	# read current hardening settings
+	# /etc/sysctl.conf - no hardening variables set in /etc/sysctl.conf by default
+	if [ `sysctl -n security.bsd.see_other_uids` -eq 1 ]; then hide_uids='off'; else hide_uids='on'; fi
+	if [ `sysctl -n security.bsd.see_other_gids` -eq 1 ]; then hide_gids='off'; else hide_gids='on'; fi
+	if [ `sysctl -n security.bsd.see_jail_proc` -eq 1 ]; then hide_jail='off'; else hide_jail='on'; fi
+	if [ `sysctl -n security.bsd.unprivileged_read_msgbuf` -eq 1 ]; then read_msgbuf='off'; else read_msgbuf='on'; fi
+	if [ `sysctl -n security.bsd.unprivileged_proc_debug` -eq 1 ]; then proc_debug='off'; else proc_debug='on'; fi
+	if [ `sysctl -n security.bsd.hardlink_check_uid` -eq 0 ]; then hardlink_uid='off'; else hardlink_uid='on'; fi
+	if [ `sysctl -n security.bsd.hardlink_check_gid` -eq 0 ]; then hardlink_gid='off'; else hardlink_gid='on'; fi
+	if [ `sysctl -n kern.randompid` -eq 0 ]; then random_pid='off'; else random_pid='on'; fi
+	if [ `sysctl -n kern.ipc.shm_use_phys` -eq 0 ]; then lock_shm='off'; else lock_shm='on'; fi
+	if [ `sysctl -n kern.msgbuf_show_timestamp` -eq 0 ]; then msgbuf_timestamp='off'; else msgbuf_timestamp='on'; fi
+	if [ `sysctl -n hw.kbd.keymap_restrict_change` -eq 0 ]; then keymap_restricted='off'; else keymap_restricted='on'; fi
+	
+	# Network
+	if [ `sysctl -n net.inet.icmp.drop_redirect` -eq 0 ]; then icmp_redirects='off'; else icmp_redirects='on'; fi
+	if [ `sysctl -n net.inet6.icmp6.rediraccept` -eq 1 ]; then icmp6_redimsg='off'; else icmp6_redimsg='on'; fi
+	if [ `sysctl -n net.inet.ip.check_interface` -eq 0 ]; then right_interface='off'; else right_interface='on'; fi
+	if [ `sysctl -n net.inet.ip.random_id` -eq 0 ]; then random_id='off'; else random_id='on'; fi
+	if [ `sysctl -n net.inet.ip.redirect` -eq 1 ]; then ip_redirect='off'; else ip_redirect='on'; fi
+	if [ `sysctl -n net.inet6.ip6.redirect` -eq 1 ]; then ipv6_redirect='off'; else ipv6_redirect='on'; fi
+	if [ `sysctl -n net.inet.tcp.drop_synfin` -eq 0 ]; then tcp_with_synfin='off'; else tcp_with_synfin='on'; fi	
+	if [ `sysctl -n net.inet.tcp.blackhole` -eq	0 ]; then tcp_blackhole='off'; else tcp_blackhole='on'; fi
+	if [ `sysctl -n net.inet.udp.blackhole` -eq	0 ] ; then udp_blackhole='off'; else udp_blackhole='on'; fi
+	if [ `sysctl -n net.inet6.ip6.use_tempaddr` -eq	0 ]; then use_tempaddr='off'; else use_tempaddr='on'; fi 
+	if [ `sysctl -n net.inet6.ip6.prefer_tempaddr` -eq 0 ]; then prefer_privaddr='off'; else prefer_privaddr='on'; fi
+
+	# /etc/rc.conf; defaults in /etc/defaults/rc.conf
+	if [ $(sysrc -n clear_tmp_enable | tr "[:lower:]" "[:upper:]") = 'NO' ]; then clear_tmp='off'; else clear_tmp='on'; fi
+	if [ `sysrc -n syslogd_flags` != '-ss' ]; then disable_syslogd='off'; else disable_syslogd='on'; fi 
+	if [ `sysrc -n sendmail_enable` = 'NONE' ]; then disable_sendmail='on'; else disable_sendmail='off'; fi
+
+	# /etc/ttys
+	grep -q '^console.*off.*insecure$' /etc/ttys
+	grep_return=$?
+	if [ $grep_return -eq 1 ]; then secure_console='off'; else secure_console='on'; fi
+
+	# /etc/loader.conf
+	grep -q 'security.bsd.allow_destructive_dtrace=0' /boot/loader.conf
+	grep_return=$?
+	if [ $grep_return -eq 1 ]; then disable_ddtrace='off'; else disable_ddtrace='on'; fi
+
+
+	FEATURES=`$DIALOG --backtitle "$BACKTITLE" \
+    	--title "System Hardening" --nocancel --separate-output \
+    	--checklist "\nPlease choose system security hardening options:" \
+    	0 0 0 \
+		"0 hide_uids" 		"Hide processes running as other users" ${hide_uids:-off} \
+		"1 hide_gids" 		"Hide processes running as other groups" ${hide_gids:-off} \
+		"2 hide_jail" 		"Hide processes running in jails" ${hide_jail:-off} \
+		"3 read_msgbuf" 	"Disable reading kernel message buffer for unprivileged users" ${read_msgbuf:-off} \
+		"4 proc_debug" 		"Disable process debugging facilities for unprivileged users" ${proc_debug:-off} \
+		"5 hardlink_uid" 	"Unprivileged processes cannot create hard links to files owned by other users" ${hardlink_uid:-off} \
+		"6 hardlink_gid" 	"Unprivileged processes cannot create hard links to files owned by other groups" ${hardlink_gid:-off} \
+		"7 random_pid" 		"Randomize the PID of newly created processes" ${random_pid:-off} \
+		"8 lock_shm" 		"Enable locking of shared memory pages in core" ${lock_shm:-off} \
+		"9 msgbuf_timestamp"	"Show timestamp in message buffer" ${msgbuf_timestamp:-off} \
+		"10 keymap_restricted" 	"Disallow keymap changes for non-privileged users" ${keymap_restricted:-off} \
+		"11 clear_tmp" 		"Clean the /tmp filesystem on system startup" ${clear_tmp:-off} \
+		"12 disable_syslogd" 	"Disable opening Syslogd network socket (disables remote logging)" ${disable_syslogd:-off} \
+		"13 disable_sendmail" 	"Disable Sendmail service" ${disable_sendmail:-off} \
+		"14 secure_console" 	"Enable console password prompt" ${secure_console:-off} \
+		"15 disable_ddtrace" 	"Disallow DTrace destructive-mode" ${disable_ddtrace:-off} \
+		3>&1 1>&2 2>&3`
+	returncode=$?
+	msg_button
+	exec 3>&- # close file descriptor 3
+
+
+	NETWORK_FEATURES=`$DIALOG --backtitle "$BACKTITLE" \
+    	--title "System Hardening - Network security" --nocancel --separate-output \
+    	--checklist "\nPlease choose system security hardening options:" \
+   		0 0 0 \
+		"0 icmp_redirects" 	"Ignore ICMP redirects" ${icmp_redirects:-off} \
+		"1 icmp6_redimsg" 	"Ignore incoming ICMPv6 redirect messages" ${icmp6_redimsg:-off} \
+		"2 right_interface" 	"Verify packet arrives on correct interface" ${right_interface:-off} \
+		"3 random_id" 		"Assign a random IP id to each packet leaving the system" ${random_id:-off} \
+		"4 ip_redirect" 	"Do not send IP redirects" ${ip_redirect:-off} \
+		"5 ipv6_redirect" 	"Do not send IPv6 redirects" ${ip_redirect:-off} \
+		"6 tcp_with_synfin" 	"Drop TCP packets with SYN+FIN set" ${tcp_with_synfin:-off} \
+		"7 tcp_blackhole"	"Drop tcp packets destined for closed ports" ${tcp_blackhole:-off} \
+		"8 udp_blackhole"	"Drop udp packets destined for closed sockets" ${udp_blackhole:-off} \
+		"9 use_tempaddr"	"Enable IPv6 privacy extensions" ${use_tempaddr:-off} \
+		"10 prefer_privaddr"	"Prefer IPv6 privacy addresses and use them over the normal addresses" ${prefer_privaddr:-off} \
+		3>&1 1>&2 2>&3`
+	returncode=$?
+	msg_button	
+	exec 3>&- # close file descriptor 3
+}
+
+
+# ---------------------- Adding new users  ----------------------
+add_user () {
+
+	$DIALOG --clear --backtitle "$BACKTITLE"\
+			--title "Add User Accounts" \
+			--defaultno \
+        	--yesno "Would you like to add users to the installed system now?" 7 40
+			
+			returncode=$?
+			yesno
+			if [ $returncode -eq $DIALOG_OK ]; then
+				clear; echo $BACKTITLE
+				echo "============================================================"
+				printf "Add Users\n\n"
+				adduser
+			fi
+}
+
+
+# -------------------------------------- IPFW Firewall -----------------------------
+config_ipfw () {
+
+# list of services, separated by spaces, that should be accessible on your pc
+FIREWALL_MYSERVICES='22/tcp'
+
+# List of IPs which has access to clients that should be allowed to access the provided services.
+# Use keyword "any" instead of IP range when any clients should access these services
+FIREWALL_ALLOWSERVICE=`netstat -r -4  | awk '/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/ {print $1}'` # IP range IPv4
+
+returncode=0
+while [ $returncode != 1 ] && [ $returncode != 255 ]
+do
+	exec 3>&1
+
+	returntext=`$DIALOG --backtitle "$BACKTITLE" \
+	  --help-status \
+	  --help-button \
+	  --item-help \
+	  --title "IPFW firewall" \
+	  --form "Configuring a simple IPFW firewall:" \
+		15 50 0 \
+		"Firewall type: "		1 1 "workstation"			1 22 11 0 "Configuring a firewall using stateful rules." \
+		"Firewall quiete: " 	2 1 "YES"					2 22  3 0 "Don't log to standard output" \
+		"My services: "			3 1	"$FIREWALL_MYSERVICES"		3 22 50 0 "List of services, separated by spaces, that should be accessible on your computer" \
+		"Allow services: " 		4 1	"$FIREWALL_ALLOWSERVICE"	4 22 50 0 "List of IPs that should be allowed to access the provided services" \
+		"Firewall log deny:	" 	5 1 "YES"				5 22  3 0 "Logs all connection attempts that are denied to /var/log/security" \
+	2>&1 1>&3`
+	returncode=$?
+	exec 3>&-
+
+	case $returncode in
+		$DIALOG_OK)
+			echo "YES"
+			FIREWALL_ENABLE="YES"
+			FIREWALL_TYPE=$(echo "$returntext" | sed -n 1p)
+			FIRWWALL_QUIET=$(echo "$returntext" | sed -n 2p)
+			FIREWALL_MYSERVICES=$(echo "$returntext" | sed -n 3p)
+			FIREWALL_ALLOWSERVICE=$(echo "$returntext" | sed -n 4p)
+			FIREWALL_LOGDENY=$(echo "$returntext" | sed -n 5p)
+			returncode=1
+			;;
+		$DIALOG_CANCEL)
+			"$DIALOG" --clear --backtitle "$BACKTITLE" \
+			--title "IPFW firewall" \
+			--yesno "Do you really want to quit without enabling the IPFW firewall?" 10 40
+			case $? in
+				$DIALOG_OK)
+					break ;;
+				$DIALOG_CANCEL)
+					returncode=99 ;;
+			esac
+			;;
+		$DIALOG_HELP)
+			"$DIALOG" --clear --colors --backtitle "$BACKTITLE" \
+			--no-collapse --cr-wrap \
+			--title "IPFW firewall help" \
+			--msgbox "\n\ZbFirewall type: \Z4workstation\Zn \n\
+  Configuring an IPFW firewall using stateful rules.\n\n\
+\ZbFirewall quiet: \Z4YES\Zn \n\
+  Set to \Zb YES\Zn to disable the display of firewall rules\n\
+  on the console during boot.\n \n\
+\ZbMy services: \Z4$FIREWALL_MYSERVICES\Zn \n\
+  My services is set to a list of TCP ports or services,\n\
+  separated by spaces, that should be accessible on your server.\n\
+  e.g. \Zb22/tcp 80/tcp 443/tcp\Zn or \Zbssh http https.\Zn \n\n\
+\ZbAllow services: \Z4$FIREWALL_ALLOWSERVICE\Zn \n\
+   List of IPs that should be allowed to access the provided\n\
+   services. Therefore it allows you to limit access to your\n\
+   exposed services to particular machines or network ranges.\n\
+   For example, this could be useful if you want a machine to host\n\
+   web content for an internal network.\n\n\
+   The keyword \Zbany\Zn can be used instead to allow any external ip\n\
+   to make use of the above services.\n\n\
+\ZbFirewall log deny: \Z4YES\Zn\n\
+  Set to \ZbYES\Zn to log all connection attempts that are denied to\n\
+  /var/log/security.
+  " 18 70
+			;;
+		*)
+			echo "Return code: $returncode"
+			exit
+			;;
+	esac
+done
+}
+
+
+# -------------------- Use IPFW (stateful firewall)  --------------------
+yesno_ipfw () {
+
+	$DIALOG --clear --backtitle "$BACKTITLE"\
+			--title "Configure a simple firewall" \
+        	--yesno "Would you like to use a simple firewall (IPFW)?" 8 50
+			
+			returncode=$?
+			yesno
+			if [ $returncode -eq $DIALOG_OK ]; then
+				config_ipfw
+			fi
+}
+
+
+reboot_freebsd () {
+
+	case $SYSTEM_REBOOT in
+		$DIALOG_OK)
+			echo ""
+			shutdown -r +10s "FreeBSD will reboot!";;
+		$DIALOG_CANCEL)
+			echo "Installation is completed - System must be rebooted!";;
+		$DIALOG_ERROR)
+			echo "ERROR!";;
+		$DIALOG_ESC)
+			printf "Installation is completed - System must be rebooted!\n";;
+		*)
+		echo "Return code was $returncode";;
+	esac
+}
+
+
+# ------------------------------------ reboot FreeBSD --------------------------
+yesno_reboot () {
+
+	SYSTEM_REBOOT=0
+	
+	$DIALOG --clear --backtitle "$BACKTITLE"\
+			--title "Reboot FreeBSD" \
+        	--yesno "Installation of Xfce Desktop Environment completed.\n\nPlease reboot FreeBSD!" 8 50
+			
+	SYSTEM_REBOOT=$?		 			
+}
+
+
+# ------------------------- add users to group ----
+add_users_group () {
+	local GROUP=$1
+	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Add users to the ${COLOR_CYAN}${GROUP}${COLOR_NC} group\n"
+	for i in `awk -F: '($3 >= 1001) && ($3 != 65534) { print $1 }' /etc/passwd`; 
+		do 
+			pw groupmod $GROUP -m $i  2>&1
+		done
+	pw groupshow $GROUP | awk -v nc=$COLOR_NC -v cyan=$COLOR_CYAN  -v green=$COLOR_GREEN -F: '{printf "[ "green "INFO" nc " ]  Group: "cyan $1 nc"\tGID: " cyan $3 nc "\tMembers: " cyan $4 nc"\n"}'
+
+}
+
+
+# ---------------------- pkg activation status check --------------------------
 check_pkg_activation () {
 	if pkg -N >/dev/null  2>&1; then
-		printf "[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  pkg is installed and activated\n"
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  pkg is installed and activated\n"
 		INSTALL_PKG=0
 	else
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  pkg will be installed\n"
@@ -136,7 +697,7 @@ check_pkg_activation () {
 }
 
 
-# ------------------------------------ set umask ----------------------------
+# ------------------------------------ set umask ------------------------------
 set_umask () {
 	FILE="/etc/login.conf"
 	if [ -f $FILE ]; then # login.conf exists?
@@ -154,22 +715,57 @@ set_umask () {
 }
 
 
+# ---------------------- Using localization  ----------------------
+set_localization () {
+
+	# --------------- initialization: account type, charset and country code ------
+	# awk search needs regular expression, you can't put /var/. Instead, use tilde: awk -v var="$var" '$0 ~ var'
+	
+	LANGUAGE_NAME=`awk -v locale="$LOCALE" -F ';' '$1~locale {print $2}' /tmp/LanguageCode_CountryCode`
+	CHARSET=`echo $LOCALE | cut -d . -f2`				# Charset
+	COUNTRY_CODE=`echo $LOCALE | cut -d . -f1 | cut -d _ -f2`	# Country_Code
+}
+
+
+# ------------------------------------- add login class user accounts ---
+add_login_class () {
+	local rc=0
+	local language_name=`echo $LANGUAGE_NAME | tr "[:upper:]" "[:lower:]"` # lower cases
+	DATE=`date "+%Y%m%d_%H%M%S"`
+
+	awk "/lang=$LOCALE/{rc=1}/{exit}/ END{exit !rc}" /etc/login.conf #Login_class for $LOCALE exists?
+	
+	if [ $? -eq 1 ]; then  # add login class in /etc/login.conf if NOT exists!
+		cp /etc/login.conf /etc/login.conf.$DATE #backup
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create backup of ${COLOR_CYAN}/etc/login.conf${COLOR_NC}. File: ${COLOR_CYAN}/etc/login.conf.$DATE${COLOR_NC}\n"
+		COMMENT="#\n# ${LANGUAGE_NAME} Users Accounts. Setup proper environment variables.\n#\n"
+		LOGIN_CLASS="$language_name|$LANGUAGE_NAME Users Accounts:\\\\\n\t:charset=${CHARSET}:\\\\\n\t\:lang=${LOCALE}:\\\\\n\t:tc=default:\n"
+
+		awk -v text="$COMMENT" -v lc="$LOGIN_CLASS" '{print};/:lang=ru_RU.UTF-8:/{c=4}c&&!--c { print text lc }' /etc/login.conf > /etc/login.tmp
+		mv /etc/login.tmp /etc/login.conf
+		cap_mkdb /etc/login.conf
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Added ${COLOR_CYAN}${language_name}${COLOR_NC} language class to ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
+	fi
+}
+
+
+# ------------------------------------ set login class for ALL users ----
+set_login_class () {
+	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set language settings (language code, country code and encoding) for ${COLOR_CYAN}ALL${COLOR_NC} users to ${COLOR_CYAN}${LANGUAGE_NAME}${COLOR_NC} ...\n"
+				
+		for i in `awk -F: '($3 >= 1001) && ($3 != 65534) { print $1 }' /etc/passwd`; 
+		do 
+			pw usermod -n $i -L `echo ${LANGUAGE_NAME} | tr "[:upper:]" "[:lower:]"` 2>&1 | awk -v yellow=$COLOR_YELLOW -v nc=$COLOR_NC '{print "[ "yellow "WARNING" nc" ]  "$0}'
+			pw usershow $i | awk -v nc=$COLOR_NC -v cyan=$COLOR_CYAN  -v green=$COLOR_GREEN -F: '{printf "[ "green "INFO" nc " ]  Login Name: "$1"\tHome: "$9"\t"cyan"Class: "$5 nc"\tShell: "$10"\n"}'  
+		done
+}
+
+
 # ------------------------------------ freebsd update ----------------------------
 freebsd_update () {
 	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  FreeBSD Update: Applying latest FreeBSD security patches\n\n"
 	freebsd-update fetch
 	freebsd-update install
-	# disable reboot check, because system reboot is required anyway 
-	# INSTALL_UPDATES=$?
-	# if [ `freebsd-version -k` != `uname -r` ]; then
-	#	printf "[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  A reboot of FreeBSD is required! Execute ${COLOR_CYAN}$0${COLOR_NC} again after system has been rebooted.\n"
-	#	printf "[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  Aborting installation!\n"
-	#	exit 1
-	# elif [ $INSTALL_UPDATES -ne 2 ]; then # freebsd-update install return value = 2 when system is up-to-date
-	#	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  FreeBSD has been successfully updated to ${COLOR_CYAN}"`freebsd-version -k`"${COLOR_NC}\n"
-	# else
-	#	printf "\n"
-	# fi
 }
 
 
@@ -185,108 +781,61 @@ install_pkg () {
 }
 
 
-# ------------------------------------ yes or no question ---------------------
-yes_no () {
-    # if the expression is true, test or [...] returns the exit-status 0 (true or successful) 
-    if [ -z $2 ]; then str="yes"; else str="no"; fi #preselection = no, if $2 not empty
-	while true; do
-	    printf "$1 (yes/no) [$str]: " #$1 question
-		read REPLY
-		case $(echo $REPLY | tr "[:upper:]" "[:lower:]") in
-			y|yes) return 0;;
-			n|no) return 1;;	
-			'') if [ -z $2 ]; then return 0; else return 1; fi ;; #Return / Enter key, always true if $2 is missing			
-			*) printf "[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  Please answer with yes or no.\n";;
-		esac
-	done
-}
-
-
-# ------------------------------------ switch  repository branch and update pkg ----------------------------
+# ------------------------------------ switch repository branch and update pkg ----------------------------
 switch_to_latest_repository () {	
-	mkdir -p /usr/local/etc/pkg/repos
-	cp /etc/pkg/FreeBSD.conf /usr/local/etc/pkg/repos/FreeBSD.conf
+	local DIR="/usr/local/etc/pkg/repos"
 
-	sed -i .bak 's/quarterly/latest/' /usr/local/etc/pkg/repos/FreeBSD.conf
-	rm /usr/local/etc/pkg/repos/FreeBSD.conf.bak
+	if [ $1 = "latest" ]; then
+		mkdir -p $DIR
+		cp /etc/pkg/FreeBSD.conf $DIR/FreeBSD.conf
 
-	if pkg update -f ; then
-		# pkg update successfully completeted
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Switched from {COLOR_CYAN}quarterly{COLOR_NC} to the {COLOR_CYAN}latest${COLOR_NC} pkg repository branch"
+		sed -i .bak 's/quarterly/latest/' $DIR/FreeBSD.conf
+		rm /usr/local/etc/pkg/repos/FreeBSD.conf.bak
+
+		if pkg update -f ; then
+			# pkg update successfully completeted
+			printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Switched from ${COLOR_CYAN}quarterly${COLOR_NC} to ${COLOR_CYAN}latest${COLOR_NC} pkg repository branch\n"
+		else
+			printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]  PKG update failed\n"
+			exit 1
+		fi
 	else
-		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]  PKG update failed\n"
-		exit 1
-	fi
-}
+		if [ -f /usr/local/etc/pkg/repos/FreeBSD.conf ]; then
+			sed -i .bak 's/latest/quarterly/' $DIR/FreeBSD.conf
+			rm /usr/local/etc/pkg/repos/FreeBSD.conf.bak
 
-
-# ------------------------------------- add login class user accounts ---
-add_login_class () {
-	local rc=0
-	DATE=`date "+%Y%m%d_%H%M%S"`
-	awk "/lang=$LOCALE/{rc=1}/{exit}/ END{exit !rc}" /etc/login.conf #Login_class for $LOCALE exists?
-	
-	if [ $? -eq 1 ]; then  # add login class for all users if NOT exists!
-		cp /etc/login.conf /etc/login.conf.$DATE #backup
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create backup of ${COLOR_CYAN}/etc/login.conf${COLOR_NC}. File: ${COLOR_CYAN}/etc/login.conf.$DATE${COLOR_NC}\n"
-		COMMENT="#\n# ${ACCOUNT} Users Accounts. Setup proper environment variables.\n#\n"
-		LOGIN_CLASS="${ACCOUNT_TYPE} Users Accounts:\\\\\n\t:charset=${CHARSET}:\\\\\n\t\:lang=${LOCALE}:\\\\\n\t:tc=default:\n"
-		awk -v text="$COMMENT" -v lc="$LOGIN_CLASS" '{print};/:lang=ru_RU.UTF-8:/{c=4}c&&!--c { print text lc }' /etc/login.conf > /etc/login.tmp
-		mv /etc/login.tmp /etc/login.conf
-		cap_mkdb /etc/login.conf
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Added ${COLOR_CYAN}${ACCOUNT}${COLOR_NC} language settings to ${COLOR_CYAN}/etc/login.conf${COLOR_NC}"
-	fi
-}
-
-
-# ------------------------------------ set login class for ALL users ----
-set_login_class_all () {
-	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  The default language (language code, country code, and encoding) is currently set to ${COLOR_CYAN}US${COLOR_NC} (US English).\n\n"
-	if yes_no "Change language settings (language code, country code and encoding) for ${COLOR_CYAN}ALL${COLOR_NC} users to ${COLOR_CYAN}${COUNTRY_CODE}${COLOR_NC} (${ACCOUNT})?"; then
-		for i in `awk -F: '($3 >= 1001) && ($3 != 65534) { print $1 }' /etc/passwd`; 
-		do 
-			pw usermod -n $i -L `echo ${ACCOUNT} | tr "[:upper:]" "[:lower:]"` 2>&1 | awk -v yellow=$COLOR_YELLOW -v nc=$COLOR_NC '{print "[ "yellow "WARNING" nc" ]  "$0}'
-			pw usershow $i | awk -v nc=$COLOR_NC -v cyan=$COLOR_CYAN  -v green=$COLOR_GREEN -F: '{printf "[ "green "INFO" nc " ]  Login Name: "$1"\tHome: "$9"\t"cyan"Class: "$5 nc"\tShell: "$10"\n"}'  
-		done
-		return 0
-	else
-	 return 1
-	fi
-}
-
-
-# ------------------------------------ set login class  ----
-set_login_class () {
-	if yes_no "Change language settings (language code, country code, and encoding) for ${COLOR_CYAN}SOME${COLOR_NC} users to ${COLOR_CYAN}${COUNTRY_CODE}${COLOR_NC} (${ACCOUNT})?"; then
-		awk -v green=$COLOR_GREEN -v nc=$COLOR_NC -v cyan=$COLOR_CYAN -F: 'BEGIN {printf "\n[ "green"INFO"nc" ]  List of FreeBSD users: "} \
-		   ($3 >= 1001) && ($3 != 65534) {printf cyan $1 nc " "}' /etc/passwd
-		printf "\n\n"
-		read -p "Enter the user names who should use $ACCOUNT language settings [ ]:" USERNAME
-		echo
-		for i in $USERNAME
-		do
-		    # set locale and error handling when a user does not exist		
-			pw usermod -n $i -L `echo ${ACCOUNT} | tr "[:upper:]" "[:lower:]"` 2>&1 | awk -v yellow=$COLOR_YELLOW -v nc=$COLOR_NC '{print "[ "yellow "WARNING" nc" ]  "$0} {exit 1}'
-			if [ $? -eq 0 ] ; then 
-				pw usershow $i | awk -v nc=$COLOR_NC -v cyan=$COLOR_CYAN  -v green=$COLOR_GREEN -F: '{printf "[ "green "INFO" nc " ]  Login Name: "$1"\tHome: "$9"\t"cyan"Class: "$5 nc"\tShell: "$10"\n"}'
+			if pkg update -f ; then
+				# pkg update successfully completeted
+				printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Switched from ${COLOR_CYAN}latest${COLOR_NC} to ${COLOR_CYAN}quarterly${COLOR_NC} pkg repository branch\n"
+			else
+				printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]  PKG update failed\n"
+				exit 1
 			fi
-		done
-    else
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  No user added to German language class!\n" 
+		fi
 	fi
 }
 
 
 # ------------------------------------ install a package from the reposity catalogues ----
 install_packages() {
-for PACKAGENAME in $*
-do
+	for PACKAGENAME in $*
+	do
 		if pkg search -L name $PACKAGENAME | cut -w -f1 | grep -x -q $PACKAGENAME; then #Check if FreeBSD package available
+			printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}$PACKAGENAME${COLOR_NC} ...\n"
 			pkg install -y $PACKAGENAME
 		else
 			printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] pkg: No packages available to install matching ${COLOR_CYAN}"$PACKAGENAME"${COLOR_NC}!\n"
-	fi
-done
+		fi
+	done
+}
+
+
+
+# --------------------------- update rc.conf ----------------------------------
+update_rc_conf () {
+	name=$1
+	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/etc/rc.conf${COLOR_NC} " 
+	sysrc $name="YES"
 }
 
 
@@ -294,37 +843,35 @@ done
 install_fonts () {
 local FONTS
 # ------------------------------------ basic fonts ----------------------------
-#x11-fonts/bitstream-vera			#Supports fully hinting, which improves the display on computer monitors.
-#x11-fonts/cantarell-fonts			#Cantarell, a Humanist sans-serif font family
-#x11-fonts/croscorefonts-fonts-ttf	#Google font for ChromeOS to replace MS TTF
-#x11-fonts/dejavu					#will be installed with xorg
-#x11-fonts/noto-basic				#Google Noto Fonts family (Basic)
-#x11-fonts/noto-emoji				#Google Noto Fonts family (Emoji)
-#x11-fonts/urwfonts					#URW font collection for X
-#x11-fonts/webfonts					#TrueType core fonts for the Web
-#x11-fonts/liberation-fonts-ttf 	#Liberation fonts from Red Hat to replace MS TTF fonts
+#x11-fonts/bitstream-vera		# Supports fully hinting, which improves the display on computer monitors.
+#x11-fonts/cantarell-fonts		# Cantarell, a Humanist sans-serif font family
+#x11-fonts/croscorefonts-fonts-ttf	# Google font for ChromeOS to replace MS TTF
+#x11-fonts/dejavu			# will be installed with xorg
+#x11-fonts/noto-basic			# Google Noto Fonts family (Basic)
+#x11-fonts/noto-emoji			# Google Noto Fonts family (Emoji)
+#x11-fonts/urwfonts			# URW font collection for X
+#x11-fonts/webfonts			# TrueType core fonts for the Web
+#x11-fonts/liberation-fonts-ttf 	# Liberation fonts from Red Hat to replace MS TTF fonts
 
 
 # ------------------------------------ terminal & editor fonts-----------------
-#x11-fonts/anonymous-pro			#Fixed width sans designed especially for coders
-#x11-fonts/firacode					#Monospaced font with programming ligatures derived from Fira
-#x11-hack/hack-font					#Monospaced font designed to be a workhorse typeface for code
-#x11-fonts/inconsolata-ttf			#Attractive font for programming
-#x11-fonts/sourcecodepro-ttf		#Set of fonts by Adobe designed for coders
+#x11-fonts/anonymous-pro		# Fixed width sans designed especially for coders
+#x11-fonts/firacode			# Monospaced font with programming ligatures derived from Fira
+#x11-hack/hack-font			# Monospaced font designed to be a workhorse typeface for code
+#x11-fonts/inconsolata-ttf		# Attractive font for programming
+#x11-fonts/sourcecodepro-ttf		# Set of fonts by Adobe designed for coders
 
-FONTS="anonymous-pro bitstream-vera cantarell-fonts croscorefonts firacode hack-font inconsolata-ttf liberation-fonts-ttf noto-basic noto-emoji sourcecodepro-ttf urwfonts webfonts"
-for font in  $FONTS; do
-	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing font: ${COLOR_CYAN}$font${COLOR_NC}\n"
-	install_packages $font
-done
+	FONTS="anonymous-pro bitstream-vera cantarell-fonts croscorefonts firacode hack-font inconsolata-ttf liberation-fonts-ttf noto-basic noto-emoji sourcecodepro-ttf urwfonts webfonts"
+
+	install_packages $FONTS
 }
 
 
 # --------------------------- set keyboard for X11 ---------------------------- 
 set_xkeyboard () {
-	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  The default keymap for XFCE and the login is '${COLOR_CYAN}us${COLOR_NC}' (English).\n"
+	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  The default keymap for XFCE and the login is '${COLOR_CYAN}us${COLOR_NC}'.\n"
 	if [ "$KEYBOARD_LAYOUT" != "us"  ] ; then
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Keyboard layout will be changed to '${COLOR_CYAN}$KEYBOARD_LAYOUT${COLOR_NC}' (${ACCOUNT}).\n"
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Keyboard layout will be changed to '${COLOR_CYAN}$KEYBOARD_LAYOUT${COLOR_NC}'.\n"
 	fi
 
 	mkdir -p /usr/local/etc/X11/xorg.conf.d
@@ -333,9 +880,20 @@ set_xkeyboard () {
 	  Identifier 		\"KeyboardDefaults\"
 	  MatchIsKeyboard 	\"on\"
 	  Option 		\"XkbLayout\" \"${KEYBOARD_LAYOUT}\"
-	  EndSection" > /usr/local/etc/X11/xorg.conf.d/keyboard-${KEYBOARD_LAYOUT}.conf
+EndSection" > /usr/local/etc/X11/xorg.conf.d/keyboard-${KEYBOARD_LAYOUT}.conf
 	  
 	chmod 644 /usr/local/etc/X11/xorg.conf.d/keyboard-${KEYBOARD_LAYOUT}.conf
+
+	if [ $KEYBOARD_VARIANT != 'default' ]; then
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  As Keyboard variant '${COLOR_CYAN}$KEYBOARD_VARIANT${COLOR_NC}' will be set.\n"
+		# The apostrophes mask the $ therefore masking must be removed before the variable. \"'${KEYBOARD_VARIANT}'\ 
+		sed -i .bak '/EndSection/i \
+	  Option 		\"XkbVariant\" \"'${KEYBOARD_VARIANT}'\"
+					' /usr/local/etc/X11/xorg.conf.d/keyboard-${KEYBOARD_LAYOUT}.conf
+		# delete backup file
+		rm  /usr/local/etc/X11/xorg.conf.d/keyboard-${KEYBOARD_LAYOUT}.conf.bak
+
+	fi
 }
 
 
@@ -365,7 +923,6 @@ check_vga_card() {
 }
 
 
-
 # ------------------------------------ install X11 video driver ---------------
 # --------------------- only nvidea and VMWare video drivers are supportet ----
 install_video_driver () {
@@ -376,7 +933,7 @@ VGA_CARD=$?
 # ------------------------------------ install X11 video driver ---------------
 case $VGA_CARD in
 	1) 
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}VMWare display driver${COLOR_NC} and ${COLOR_CYAN}Open VMWare tools${COLOR_NC} ...\n"
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}VMWare display driver${COLOR_NC} and ${COLOR_CYAN}Open VMWare tools${COLOR_NC} ...\n"
 		# pkg install -y xf86-video-vmware open-vm-tools
 		install_packages xf86-video-vmware open-vm-tools
 		
@@ -387,24 +944,26 @@ case $VGA_CARD in
 		# vmhgfs is the driver that allows the shared files feature of VMware Workstation and other products that use it
 		# vmblock is block filesystem driver to provide drag-and-drop functionality from the remote console
 		# VMware Guest Daemon (guestd) is the daemon for controlling communication between the guest and the host including time synchronization		
-		
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/etc/rc.conf${COLOR_NC}\n"
-		sysrc vmware_guest_vmblock_enable="YES" vmware_guest_vmhgfs_enable="YES" vmware_guest_vmmemctl_enable="YES" vmware_guest_vmxnet_enable="YES" vmware_guestd_enable="YES";;
+		update_rc_conf vmware_guest_vmblock_enable
+		update_rc_conf vmware_guest_vmhgfs_enable
+		update_rc_conf vmware_guest_vmmemctl_enable
+		update_rc_conf vmware_guest_vmxnet_enable
+		update_rc_conf vmware_guestd_enable 
+		;;
 				
 	2) 	
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}nvidia display driver (X64)${COLOR_NC} ...\n"
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}nvidia display driver (X64)${COLOR_NC} ...\n"
 		# pkg install -y nvidia-driver
 		# pkg install -y nvidia-settings
 		# pkg install -y nvidia-xconfig
 		install_packages nvidia-driver nvidia-settings nvidia-xconfig
-		
 		
 		# run nvidia autoconfig
 		nvidia-xconfig
 		
 		# ---- update rc.conf, nvidia drivers - to load the kernel modules at boot ---
 		# linux.ko and nvidia.ko will be loaded as dependency of nvidia-modeset.ko
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/etc/rc.conf${COLOR_NC}\n"
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/etc/rc.conf${COLOR_NC} "
 		sysrc kld_list+="nvidia-modeset";;
 			 
 	*) printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] Only NVIDEA graphics cards or installation on VMWare is supportet!\n"
@@ -418,16 +977,16 @@ esac
 fetch_wallpaper () {
 	
 	# Variables
-	local DIR="/usr/local/share/backgrounds/"				# Xfce background folder
+	local DIR="/usr/local/share/backgrounds/" # Xfce background folder
 	if [ -d $DIR ]; then
-		cd /usr/local/share/backgrounds/
+		cd $DIR
 			
 		# --------------------- fetch favorite wallpaper ----------------------
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/Mountain_1920x1080.jpg${COLOR_NC} from gitgub...\n"
-		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/Mount_Fitz_Roy_1920x1080.jpg
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}wallpapers/Mountain_1920x1080.jpg${COLOR_NC} from gitgub "
+		fetch --no-verify-peer ${GITHUB_REPOSITORY}/wallpaper/Mount_Fitz_Roy_1920x1080.jpg
 			
 	else
-		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
+		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
 	fi	
 }
 
@@ -468,7 +1027,7 @@ patch_lockscreen_theme () {
 		#  border-width: 0 1px 1px 1px;
 		#  box-shadow: inset 0 1px rgba(37, 45, 48, 0.95);
 		#}		
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Patching ${COLOR_CYAN}${FILE}${COLOR_NC}...\n"
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Patching ${COLOR_CYAN}${FILE}${COLOR_NC} ...\n"
        
 	    # sed '/Beginn/,/Ende/ s/alt/NEU/' inputfile
 		sed -i .bak '/#buttonbox_frame {/,/}/ s/background-color:.*/background-color: rgba(0, 35, 44, 0.95);/' $FILE
@@ -523,7 +1082,7 @@ set_lightdm_greeter () {
 		sed -i .bak "s/Exec=lightdm-gtk-greeter/Exec=env LANG=$LOCALE lightdm-gtk-greeter/" $FILE
 		cat $FILE; echo""
 	else
-		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$FILE"${COLOR_NC} does not exist!\n"
+		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$FILE"${COLOR_NC} does not exist!\n"
 	fi	
 	rm ${FILE}.bak # Delete backup file
 	
@@ -535,7 +1094,7 @@ set_lightdm_greeter () {
 	case $VGA_CARD in
 		1) 	XRANDR="display-setup-script=xrandr --output default --mode $SCREEN_SIZE";;
 		2) 	XRANDR="xdisplay-setup-script=";;
-		*) 	printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] Only NVIDEA graphics cards or installation on VMWare is supportet!\n"
+		*) 	printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] Only NVIDEA graphics cards or installation on VMWare is supportet!\n"
 			exit 1;;
 	esac
 
@@ -547,13 +1106,16 @@ set_lightdm_greeter () {
 		if [ "$VGA_CARD" -eq 1 ]; then
 			printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  lightdm.conf: Set ${COLOR_CYAN}${XRANDR}${COLOR_NC}\n"
 		fi
-		echo""
+		
 		sed -i .bak -e "s/#greeter-setup-script=.*/greeter-setup-script=setxkbmap  -layout $KEYBOARD_LAYOUT/" \
 					-e "s/#display-setup-script=.*/$XRANDR/" $FILE
+		# overwrite if setting already exists
+		sed -i .bak -e "s/^greeter-setup-script=.*/greeter-setup-script=setxkbmap  -layout $KEYBOARD_LAYOUT/" \
+					-e "s/^display-setup-script=.*/$XRANDR/" $FILE
 		
 		sed -n "/^\[Seat/,/#exit-on-failure/p" $FILE               # Print [Seat:*] section
 	else
-		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$FILE"${COLOR_NC} does not exist!\n"
+		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$FILE"${COLOR_NC} does not exist!\n"
 	fi	
 	rm ${FILE}.bak # Delete backup file
 	
@@ -564,7 +1126,7 @@ set_lightdm_greeter () {
 	
 	if [ -f $FILE ]; then   # lightdm-gtk-greeter.conf exists?
         # tweak lightdm-gtk-greeter configuration
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Updating LightDM GTK+ Greeter configuration...\n"
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Updating ${COLOR_CYAN}LightDM GTK+ Greeter${COLOR_NC} configuration ...\n"
         
 		# if #default-user-image= does not exists, insert default-user-image parameter before line with #screensaver-timeout=
 		if ! grep -q 'default-user-image=' $FILE; then
@@ -587,7 +1149,7 @@ set_lightdm_greeter () {
         sed -n '/\[greeter\]/,$p' $FILE                 # Print [greeter] section
 		rm ${FILE}.bak # Delete backup file
     else
-        printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
+        printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
     fi
 
    
@@ -602,24 +1164,26 @@ set_lightdm_greeter () {
 		
 		
 		# ------------------- fetch lock screen wallpapers --------------------
-		
-		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-blue.png
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Download ${COLOR_CYAN}Lock Screen Wallpapers${COLOR_NC} from gitgub ...\n"
+
+		fetch --no-verify-peer ${GITHUB_REPOSITORY}/wallpaper/FreeBSD-lockscreen_v1-blue.png
 		chmod 644 FreeBSD-lockscreen_v1-blue.png
-		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v1-red.png
+		fetch --no-verify-peer ${GITHUB_REPOSITORY}/wallpaper/FreeBSD-lockscreen_v1-red.png
 		chmod 644 FreeBSD-lockscreen_v1-red.png
 		
-		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-blue.png
+		fetch --no-verify-peer ${GITHUB_REPOSITORY}/wallpaper/FreeBSD-lockscreen_v2-blue.png
 		chmod 644 FreeBSD-lockscreen_v2-blue.png
-		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v2-red.png
+		fetch --no-verify-peer ${GITHUB_REPOSITORY}/wallpaper/FreeBSD-lockscreen_v2-red.png
 		chmod 644 FreeBSD-lockscreen_v2-red.png
 		
-		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-blue.png
+		fetch --no-verify-peer ${GITHUB_REPOSITORY}/wallpaper/FreeBSD-lockscreen_v3-blue.png
 		chmod 644 FreeBSD-lockscreen_v3-blue.png
-		fetch --no-verify-peer https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main/wallpaper/FreeBSD-lockscreen_v3-red.png
+		fetch --no-verify-peer ${GITHUB_REPOSITORY}/wallpaper/FreeBSD-lockscreen_v3-red.png
 		chmod 644 FreeBSD-lockscreen_v3-red.png
+		echo""
 				
 	else
-		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
+		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}"$DIR"${COLOR_NC} does not exist!\n"
 	fi	
 }
 
@@ -629,8 +1193,8 @@ set_lightdm_greeter () {
 
 # --------------------------- FreeBSD update ----------------------------------
 daily_check_for_updates () {
-	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Add crontab file to check for updates daily...\n"
-	echo "# /etc/cron.d/system_update - crontab file to automatically check for updates daily
+	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Add crontab file to check for updates daily ...\n"
+	echo "# /etc/cron.d/s/:system_update - crontab file to automatically check for updates daily
 #
 #
 SHELL=/bin/sh
@@ -651,22 +1215,6 @@ chmod 640 /etc/cron.d/system_update
 }
 
 
-# -------------------------------------- Firewall -----------------------------
-enable_ipfw_firewall () {
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Enable the predefined ipfw firewall...\n"
-# Enable the predefined ipfw firewall: 
-sysrc firewall_enable="YES" 
-sysrc firewall_quiet="YES" 				# suppress rule display
-sysrc firewall_type="workstation"		# protects only this machine using stateful rules
-sysrc firewall_myservices="$FIREWALL_MYSERVICES"
-sysrc firewall_allowservices="$FIREWALL_ALLOWSERVICE"
-
-# log denied packets to /var/log/security
-sysrc firewall_logdeny="YES"
-}
-
-
-
 # -------------------------- FreeBSD security settings (not entirely!) --------
 # --------------- (some options already offers during installation)  ----------
 system_hardening () {
@@ -674,162 +1222,207 @@ system_hardening () {
     FILE="/etc/sysctl.conf"
 
 	if [ -f $FILE ]; then   # /etc/sysctl.conf exists?
-        # System security hardening options
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set system security hardening options in ${COLOR_CYAN}${FILE}${COLOR_NC}...\n"
-            
-		# use delimiter ':' instead of '/'
-        sed -i .bak -e "s:^security.bsd.see_other_gids=.*:security.bsd.see_other_gids=0:" 									\
-					-e "s:^security.bsd.see_other_uids=.*:security.bsd.see_other_uids=0:" 									\
-					-e "s:^security.bsd.see_jail_proc=.*:security.bsd.see_jail_proc=0:"   									\
-					-e "s:^security.bsd.unprivileged_read_msgbuf=.*:security.bsd.unprivileged_read_msgbuf=0:" 				\
-					-e "s:^security.bsd.unprivileged_proc_debug=.*:security.bsd.unprivileged_proc_debug=0:" 				\
-					-e "s:^security.bsd.stack_guard_page=.*:security.bsd.stack_guard_page=1:" 								\
-					-e "s:^security.bsd.hardlink_check_uid=.*:security.bsd.hardlink_check_uid=1:" 							\
-					-e "s:^security.bsd.hardlink_check_gid=.*:security.bsd.hardlink_check_gid=1:" 							\
-					-e "s:^kern.randompid=.*:kern.randompid=1:"																\
-					-e "s:^kern.ipc.shm_use_phys=.*:kern.ipc.shm_use_phys=1:" 												\
-					-e "s:^kern.msgbuf_show_timestamp=.*:kern.msgbuf_show_timestamp=1:" 									\
-					-e "s:^hw.kbd.keymap_restrict_change=.*:hw.kbd.keymap_restrict_change=4:" 								\
-					-e "s:^net.inet.icmp.drop_redirect=.*:net.inet.icmp.drop_redirect=1:" 									\
-					-e "s:^net.inet6.icmp6.rediraccept=.*:net.inet6.icmp6.rediraccept=0:" 									\
-					-e "s:^net.inet.ip.check_interface=.*:net.inet.ip.check_interface=1:" 									\
-					-e "s:^net.inet.ip.random_id=.*:net.inet.ip.random_id=1:" 												\
-					-e "s:^net.inet.ip.redirect=.*:net.inet.ip.redirect=0:" 												\
-					-e "s:^net.inet6.ip6.redirect=.*:net.inet6.ip6.redirect=0:" 											\
-					-e "s:^net.inet.tcp.drop_synfin=.*:net.inet.tcp.drop_synfin=1:" 										\
-					-e "s:^net.inet.tcp.blackhole=.*:net.inet.tcp.blackhole=2:" 											\
-					-e "s:^net.inet.udp.blackhole=.*:net.inet.udp.blackhole=1:" 											\
-					-e "s:^net.inet6.ip6.use_tempaddr=.*:net.inet6.ip6.use_tempaddr=1:" 									\
-					-e "s:^net.inet6.ip6.prefer_tempaddr=.*:net.inet6.ip6.prefer_tempaddr=1:" $FILE
-											
-											
-		# append system hardening parameter at EOF, if parameter not exists 
-		grep -q '^security.bsd.see_other_gids=' $FILE 			|| echo 'security.bsd.see_other_gids=0' 			>> $FILE 			# Hide processes running as other users
-		grep -q '^security.bsd.see_other_uids=' $FILE 			|| echo 'security.bsd.see_other_uids=0' 			>> $FILE 			# Hide processes running as other groups 
-		grep -q '^security.bsd.see_jail_proc=' $FILE 			|| echo 'security.bsd.see_jail_proc=0' 				>> $FILE 			# Hide processes running in jails
-		grep -q '^security.bsd.unprivileged_read_msgbuf=' $FILE	|| echo 'security.bsd.unprivileged_read_msgbuf=0' 	>> $FILE 			# Disable reading kernel message buffer for unprivileged users
-		grep -q '^security.bsd.unprivileged_proc_debug=' $FILE 	|| echo 'security.bsd.unprivileged_proc_debug=0'	>> $FILE 			# Disable process debugging facilities for unprivileged users
-		grep -q '^security.bsd.stack_guard_page=' $FILE 		|| echo 'security.bsd.stack_guard_page=1'			>> $FILE 			# Additional stack protection, specifies the number of guard pages for a stack that grows
-		grep -q '^security.bsd.hardlink_check_uid=' $FILE 		|| echo 'security.bsd.hardlink_check_uid=1'			>> $FILE 			# Unprivileged users are not permitted to create hard links to files not owned by them	
-		grep -q '^security.bsd.hardlink_check_gid=' $FILE 		|| echo 'security.bsd.hardlink_check_gid=1'			>> $FILE 			# Unprivileged users are not permitted to create hard links to files if they are not member of file's group.
-		grep -q '^kern.randompid=' $FILE 						|| echo 'kern.randompid=1' 							>> $FILE 			# Randomize the PID of newly created processes
-		grep -q '^kern.ipc.shm_use_phys=' $FILE 				|| echo 'kern.ipc.shm_use_phys=1'					>> $FILE 			# Lock shared memory into RAM and prevent it from being paged out to swap (default 0, disabled)
-		grep -q '^kern.msgbuf_show_timestamp=' $FILE 			|| echo 'kern.msgbuf_show_timestamp=1'				>> $FILE 			# Display timestamp in msgbuf (default 0)
-		#grep -q '^hw.kbd.keymap_restrict_change=' $FILE 		|| echo 'hw.kbd.keymap_restrict_change=4'			>> $FILE 			# Disallow keymap changes for non-privileged users
-		grep -q '^net.inet.icmp.drop_redirect=1' $FILE   		|| echo 'net.inet.icmp.drop_redirect=1'  			>> $FILE 			# Ignore ICMP redirects (default 0)
-		grep -q '^net.inet6.icmp6.rediraccept=0' $FILE   		|| echo 'net.inet6.icmp6.rediraccept=0'  			>> $FILE 			# Ignore ICMPv6 redirect messages (default 1), 1=accept
-		grep -q '^net.inet.ip.check_interface=1' $FILE   		|| echo 'net.inet.ip.check_interface=1'  			>> $FILE 			# Verify packet arrives on correct interface (default 0)
-		grep -q '^net.inet.ip.random_id=1' $FILE   				|| echo 'net.inet.ip.random_id=1'        			>> $FILE 			# Assign a random IP id to each packet leaving the system (default 0)
-		grep -q '^net.inet.ip.redirect=0'  $FILE   				|| echo 'net.inet.ip.redirect=0'         			>> $FILE 			# Do not send IP redirects (default 1)
-		grep -q '^net.inet6.ip6.redirect=0' $FILE   			|| echo 'net.inet6.ip6.redirect=0' 	     			>> $FILE 			# Do not send IPv6 redirects (default 1)
-		grep -q '^net.inet.tcp.drop_synfin=1' $FILE   			|| echo 'net.inet.tcp.drop_synfin=1'	 			>> $FILE 			# Drop TCP packets with SYN+FIN set (default 0)
-		grep -q '^net.inet.tcp.blackhole=2' $FILE   			|| echo 'net.inet.tcp.blackhole=2'		 			>> $FILE 			# Don't answer on closed TCP ports(default 0)
-		grep -q '^net.inet.udp.blackhole=1'	$FILE   			|| echo 'net.inet.udp.blackhole=1'		 			>> $FILE 			# Don't answer on closed UDP ports (default 0)
-		grep -q '^net.inet6.ip6.use_tempaddr=1'	$FILE   		|| echo 'net.inet6.ip6.use_tempaddr=1'	 			>> $FILE 			# Enable privacy settings for IPv6 (RFC 3041)
-		grep -q '^net.inet6.ip6.prefer_tempaddr=1' $FILE   		|| echo 'net.inet6.ip6.prefer_tempaddr=1'			>> $FILE 			# Prefer privacy addresses and use them over the normal addresses
+        
+		# delete existing hardening values
+		# /etc/sysctl.conf
+        sed -i .bak -e "/^security.bsd.see_other_gids=.*/d" 			\
+			-e "/^security.bsd.see_other_uids=.*/d" 		\
+			-e "/^security.bsd.see_jail_proc=.*/d"			\
+			-e "/^security.bsd.unprivileged_read_msgbuf=.*/d"	\
+			-e "/^security.bsd.unprivileged_proc_debug=.*/d"	\
+			-e "/^security.bsd.hardlink_check_uid=.*/d"		\
+			-e "/^security.bsd.hardlink_check_gid=.*/d"		\
+			-e "/^kern.randompid=.*/d"				\
+			-e "/^kern.ipc.shm_use_phys=.*/d"			\
+			-e "/^kern.msgbuf_show_timestamp=.*/d"			\
+			-e "/^hw.kbd.keymap_restrict_change=.*/d"		\
+			-e "/^net.inet.icmp.drop_redirect=.*/d"			\
+			-e "/^net.inet6.icmp6.rediraccept=.*/d"			\
+			-e "/^net.inet.ip.check_interface=.*/d"			\
+			-e "/^net.inet.ip.random_id=.*/d"			\
+			-e "/^net.inet.ip.redirect=.*/d"			\
+			-e "/^net.inet6.ip6.redirect=.*/d"			\
+			-e "/^net.inet.tcp.drop_synfin=.*/d"			\
+			-e "/^net.inet.tcp.blackhole=.*/d"			\
+			-e "/^net.inet.udp.blackhole=.*/d"			\
+			-e "/^net.inet6.ip6.use_tempaddr=.*/d"			\
+			-e "/^net.inet6.ip6.prefer_tempaddr=.*/d" $FILE
+		
+		# /etc/rc.conf
+		sed -i .bak	-e "/^clear_tmp_enable=.*/d"\
+				-e "/^syslogd_flags=.*/d"	\
+				-e "/^sendmail_enable/d" /etc/rc.conf
+
+		# /etc/ttys
+	    	sed -i .bak "s/unknown.*off.*insecure/unknown	off secure/g" /etc/ttys 
+		rm /etc/ttys.bak		
+		
+		# /boot/loader.conf
+	    	sed -i .bak "/^security.bsd.allow_destructive_dtrace=.*/d" /boot/loader.conf
+		
+		
+		# System security hardening options
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set system security hardening options in ${COLOR_CYAN}${FILE}${COLOR_NC} ...\n"
+		for feature in $FEATURES $NETWORK_FEATURES; do
+
+			case "$feature" in
+				hide_uids)
+					echo 'security.bsd.see_other_uids=0' >> $FILE		# Hide processes running as other users
+					;;
+				hide_gids)
+					echo 'security.bsd.see_other_gids=0' >> $FILE		# Hide processes running as other groups 
+					;;
+				hide_jail)
+					echo 'security.bsd.see_jail_proc=0' >> $FILE		# Hide processes running in jails
+					;;
+				read_msgbuf)
+					echo 'security.bsd.unprivileged_read_msgbuf=0' >> $FILE	# Disable reading kernel message buffer for unprivileged users
+					;;
+				proc_debug)
+					echo 'security.bsd.unprivileged_proc_debug=0' >> $FILE	# Disable process debugging facilities for unprivileged users
+					;;
+				hardlink_uid)
+					echo 'security.bsd.hardlink_check_uid=1' >> $FILE	# Unprivileged users are not permitted to create hard links to files not owned by the
+					;;
+				hardlink_gid)
+					echo 'security.bsd.hardlink_check_gid=1' >> $FILE	# Unprivileged users are not permitted to create hard links to files if they are not member of file's group
+					;;
+				random_pid)
+					echo 'kern.randompid=1'	>> $FILE			# Randomize the PID of newly created processes	
+					;;
+				lock_shm)
+					echo 'kern.ipc.shm_use_phys=1' >> $FILE			# Lock shared memory into RAM and prevent it from being paged out to swap (default 0, disabled)
+					;;
+				msgbuf_timestamp)
+					echo 'kern.msgbuf_show_timestamp=1' >> $FILE		# Display timestamp in msgbuf (default 0)
+					;;
+				keymap_restricted)
+					echo 'hw.kbd.keymap_restrict_change=4' >> $FILE		# Disallow keymap changes for non-privileged users
+					;;
+				# Network
+				icmp_redirects)
+					echo 'net.inet.icmp.drop_redirect=1' >> $FILE		# Ignore ICMP redirects (default 0)
+					;;
+				icmp6_redimsg)
+					echo 'net.inet6.icmp6.rediraccept=0' >> $FILE		# Ignore ICMPv6 redirect messages (default 1, 1=accept)
+					;;
+				right_interface)
+					echo 'net.inet.ip.check_interface=1' >> $FILE		# Verify packet arrives on correct interface (default 0)
+					;;
+				random_id)
+					echo 'net.inet.ip.random_id=1' >> $FILE			# Assign a random IP id to each packet leaving the system (default 0)
+					;;
+				ip_redirect)
+					echo 'net.inet.ip.redirect=0' >> $FILE			# Do not send IP redirects (default 1)
+					;;
+				ipv6_redirect)
+					echo 'net.inet6.ip6.redirect=0' >> $FILE		# Do not send IPv6 redirects (default 1)
+					;;
+				tcp_with_synfin)
+					echo 'net.inet.tcp.drop_synfin=1' >> $FILE		# Drop TCP packets with SYN+FIN set (default 0)
+					;;
+				tcp_blackhole)
+					echo 'net.inet.tcp.blackhole=2'	>> $FILE		# Don't answer on closed TCP ports(default 0)
+					;;
+				udp_blackhole)
+					echo 'net.inet.udp.blackhole=1'	>> $FILE		# Don't answer on closed UDP ports (default 0)
+					;;
+				use_tempaddr)
+					echo 'net.inet6.ip6.use_tempaddr=1'	>> $FILE	# Enable privacy settings for IPv6 (RFC 3041)
+					;;
+				prefer_privaddr)
+					echo 'net.inet6.ip6.prefer_tempaddr=1' 	>> $FILE	# refer privacy addresses and use them over the normal addresses
+					;;
+				# /etc/rc.conf
+				clear_tmp)
+					printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Clean the ${COLOR_CYAN}/tmp ${COLOR_NC}filesystem on system startup ...\n"
+					sysrc clear_tmp_enable="YES"
+					;;
+				disable_syslogd)
+					printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Disable opening Syslogd network socket (disables remote logging) ...\n"
+					sysrc syslogd_flags="-ss"
+					;;
+				disable_sendmail)
+					printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Disable sendmail service ...\n"
+					sysrc sendmail_enable="NONE"
+					;;				
+				# /etc/ttys	
+				secure_console)
+					printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Enable console password prompt ...\n"
+					sed -i .bak "s/unknown.*off.*secure/unknown	off	insecure/g" /etc/ttys
+					rm /etc/ttys.bak
+					;;
+				# /loader.conf
+				disable_ddtrace)
+					printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Disallow DTrace destructive-mode ...\n"
+					echo 'security.bsd.allow_destructive_dtrace=0' >> /boot/loader.conf
+					;;
+			esac
+		done
 
 	else
-        printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
-    fi
+ 		printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
+ 	fi
 
-	rm ${FILE}.bak # delete backup file
-   
-	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Clean the ${COLOR_CYAN}/tmp ${COLOR_NC}filesystem on system startup...\n"
-	sysrc clear_tmp_enable="YES"	# Clean the /tmp filesystem on system startup
-	
-	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Disable opening Syslogd network socket (disables remote logging)...\n"
-	sysrc syslogd_flags="-ss"		# Disable opening Syslogd network socket (disables remote logging)
-	
-	
-	# Disable sendmail service
-	#printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Disable sendmail service...\n"
-	#sysrc sendmail_enable="NONE"
+	rm ${FILE}.bak /etc/rc.conf.bak /boot/loader.conf.bak # delete backup files
+}
+
+# -------------------------------------- Firewall -----------------------------
+enable_ipfw_firewall () {
+
+	if [ FIREWALL_ENABLE = "YES" ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Enable the predefined ipfw firewall ...\n"
+		sysrc firewall_enable="YES"				# Enable the predefined ipfw firewall 			
+		sysrc firewall_type="workstation"		# Overwrite setting from dialog; protects only this machine using stateful rules
+		if [ FIRWWALL_QUIET = "YES" ]; then
+			sysrc firewall_quiet="YES" 			# suppress rule display
+		fi
+		sysrc firewall_myservices="$FIREWALL_MYSERVICES"
+		sysrc firewall_allowservices="$FIREWALL_ALLOWSERVICE"
+
+		# log denied packets to /var/log/security
+		if [ FIREWALL_LOGDENY ="YES" ]; then
+			sysrc firewall_logdeny="YES"
+		fi
+	fi
 }
 
 
-install_rkhunter () {
-	install_packages rkhunter
+enable_rkhunter () {
 	
-	FILE="/etc/periodic.conf"	# this file contains local overrides for the default periodic configuration
-	
-	if [ ! -f $FILE ]; then   # /etc/periodic.conf exists?
-		touch $FILE
-	fi
-	cat <<- EOF >> $FILE
-		# Keep your rkhunter database up-to-date
-		daily_rkhunter_update_enable="YES"
-		daily_rkhunter_update_flags="--update --nocolors"
+	if pkg info | grep -q rkhunter; then 	# Check if FreeBSD package rkhunter is installed
+		FILE="/etc/periodic.conf"			# this file contains local overrides for the default periodic configuration
 
-		# Daily security check
-		daily_rkhunter_check_enable="YES"
-		daily_rkhunter_check_flags="--checkall --nocolors --skip-keypress"
-	EOF
-	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ] ${COLOR_CYAN}$FILE:${COLOR_NC}\n"
-	cat $FILE
-}
-
-
-# ------------------------------------ utilities ------------------------------
-install_utilities () {
-	if [ "$INSTALL_CATFISH" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Catfish${COLOR_NC}...\n"
-		install_packages catfish
-	fi
-	
-	if [ "$INSTALL_DOAS" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}doas${COLOR_NC}...\n"
-		install_packages doas
-	fi
-	
-	if [ "$INSTALL_FILE_ROLLER" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Archive manager for zip files, tar, etc${COLOR_NC}...\n"
-		install_packages file-roller p7zip
-	fi
-	
-	if [ "$INSTALL_GLANCES" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}cross-platform monitoring tool glances${COLOR_NC}...\n"
-		install_packages py38-glances
-	fi
+		if [ ! -f $FILE ]; then   			# /etc/periodic.conf exists?
+			touch $FILE
+		else
+			# delete existing parameters for rkhunter in /etc/periodic.conf
+			sed -i .bak '/# Keep your rkhunter database up-to-date/,/daily_rkhunter_check_flags="--checkall --nocolors --skip-keypress"/d' $FILE
 		
-	if [ "$INSTALL_HTOP" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Htop${COLOR_NC}...\n"
-		install_packages htop
-	fi
-	
-	if [ "$INSTALL_LYNIS" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}lynis${COLOR_NC}...\n"
-		install_packages lynis
-	fi
-	
-	if [ "$INSTALL_NEOFETCH" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Neofetch${COLOR_NC}...\n"
-		install_packages neofetch
-	fi
-	
-	if [ "$INSTALL_OCTOPKG" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}OctpPkg${COLOR_NC}...\n"
-		install_packages octopkg
-	fi
-	
-	if [ "$INSTALL_RKHUNTER" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}rkhunter${COLOR_NC}...\n"
-		install_rkhunter
-	fi
-	
-	if [ "$INSTALL_SYSINFO" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Sysinfo${COLOR_NC}...\n"
-		install_packages sysinfo
-	fi
+		rm ${FILE}.bak
+		fi
+		
+		cat <<- EOF >> $FILE
+			# Keep your rkhunter database up-to-date
+			daily_rkhunter_update_enable="YES"
+			daily_rkhunter_update_flags="--update --nocolors"
 
+			# Daily security check
+			daily_rkhunter_check_enable="YES"
+			daily_rkhunter_check_flags="--checkall --nocolors --skip-keypress"
+		EOF
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ] ${COLOR_CYAN}$FILE:${COLOR_NC}\n"
+		cat $FILE
+	fi
 }
 
 
 # ------------------------ Intel and AMD CPUs microcode updates ---------------
 install_cpu_microcode_updates () {
 	if [ "$INSTALL_CPU_MICROCODE_UPDATES" -eq 1 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}devcpu-data${COLOR_NC} will allow host startup to update the CPU microcode on a FreeBSD system automatically...\n"
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}devcpu-data${COLOR_NC} will allow host startup to update the CPU microcode on a FreeBSD system automatically ...\n"
 		install_packages devcpu-data # pkg install devcpu-data
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/boot/loader.conf${COLOR_NC} to update the CPU microcode automatically on on a FreeBSD system startup...\n"
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/boot/loader.conf${COLOR_NC} to update the CPU microcode automatically on on a FreeBSD system startup ...\n"
 		#loads and applies the update before the kernel begins booting
 		sysrc -f /boot/loader.conf cpu_microcode_load="YES"
 		sysrc -f /boot/loader.conf cpu_microcode_name="/boot/firmware/intel-ucode.bin"
@@ -841,285 +1434,127 @@ install_cpu_microcode_updates () {
 silent_boot_messages () {
 printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set FreeBSD ${COLOR_CYAN}boot delay${COLOR_NC} to 5 seconds\n"
 sysrc -f /boot/loader.conf autoboot_delay="$AUTOBOOTDELAY" 		# Delay in seconds before autobooting
-#sysrc -f /boot/loader.conf boot_mute="YES"						# Mute the content
+#sysrc -f /boot/loader.conf boot_mute="YES"	# Mute the content
 
-													# rc_startmsgs
-#sysrc rc_startmsgs="NO"							# for troubleshooting issues, most boot messages can be found under:
-													# dmesg 
-													# (cat|tail|grep|less|more..) /var/log/messages
+							# rc_startmsgs
+#sysrc rc_startmsgs="NO"	# for troubleshooting issues, most boot messages can be found under:
+							# dmesg 
+							# (cat|tail|grep|less|more..) /var/log/messages
 }
 
 
 ## ----------------------------------------------------------------------------
 ## ----------------------------------- Main -----------------------------------
 ## ----------------------------------------------------------------------------
-install_xfce_greeter
-check_if_root
-display_system_info
+
+# precondions
+set -o pipefail 	# Change the exit status of a pipeline to the last non-zero existatus of any command, if any
+set -o errexit		# Exit immediately if any untested command fails in non-interactive mode 
+
+{
+display_date
+check_if_root 
 check_network
+} 2>&1 | tee $LOGFILE
+
+set +o errexit		# Disable errexit for dialog boxes
+
+# Welcome, select language, country code and keyboard for installation
+msgbox_welcome
+menubox_language
+menubox_xkeyboard
+
+# ----------- Select applications & utilities for installation ----------------
+checklist_applications
+checklist_utilities
+radiolist_repository_branch
+yesno_summary
+add_user
+
+{
+display_system_info
 check_pkg_activation
 set_umask
+set_localization
+add_login_class
+set_login_class
 freebsd_update
 install_pkg
-
-# -------------------------------- Switching from quarterly to latest?  ------ 
-  
-if (yes_no "\nSwitch from ${COLOR_CYAN}quarterly${COLOR_NC} to the ${COLOR_CYAN}latest${COLOR_NC} repository (use latest versions of FreeBSD packages)? " NO); then
-	switch_to_latest_repository
-fi
+switch_to_latest_repository $REPOSITORY # Quarterly or latest package branches 
+} 2>&1 | tee -a $LOGFILE
 
 
-add_login_class
-# Set login class
-if !(set_login_class_all); then  # for all users
-   set_login_class				 # selection of users
-fi
+## -------------------------------- start installation -------------------------
+## -----------------------------------------------------------------------------
 
-
-# -----------------------------------------------------------------------------
-# ------------------ Installation of software packages ------------------------
-# -----------------------------------------------------------------------------
-
-# ----------------------------------- user interaction -----------------------
-# ----------------------------------------------------------------------------
-
-printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Select applications you would like to install:\n"
-#  ----------------------------------- editor ---------------------------------
-yes_no "\nInstall Vim (Improved version of the vi editor)?"
-INSTALL_EDITOR=$?
-
-
-#  ----------------------------------- grafik ---------------------------------
-yes_no "Install Gimp (Free & Open Source Image Editor)?"
-INSTALL_GIMP=$?
-
-
-#  ----------------------------------- internet & cloud -----------------------
-yes_no "Install Firefox (Mozilla's web browser)?"
-INSTALL_BROWSER=$?
-
-
-#  ----------------------------------- mulitmedia -----------------------------
-## ----------------------------------- software to be installed ---------------
-yes_no "Install Audio, Graphics & Video Applications (Audacious, mpv, VLC, Ristretto, Shotweel)?"
-INSTALL_AUDIOPLAYER=$?
-INSTALL_MPV=$?
-INSTALL_VLC=$?
-INSTALL_IMAGEVIEWER=$? 
-INSTALL_SHOTWELL=$?
-
-
-#  ----------------------------------- office & mail --------------------------
-yes_no "Install LibreOffice and Thunderbird (LibreOffice, Thunderbird, CUPS)?"
-INSTALL_OFFICE=$?
-INSTALL_MAIL=$?
-# -------------------------------- printing -----------------------------------
-INSTALL_CUPS=$?				# CUPS is a standards-based, open source printing system
-
-
-#  ----------------------------------- security -------------------------------
-yes_no "Install KeePassXC (easy-to-use password manager)?"
-INSTALL_KEEPASS=$?
-
-#  ----------------------------------- utilities -------------------------------
-yes_no "Install utilities, e.g catfish, doas, htop, file archiver lynis, etc. ?"
-INSTALL_UTILITIES=$?
-
-# ----------------------------- abort installation  ---------------------------
-printf "\n[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  Last change to cancel the installation!\n"    
-if !(yes_no "Is everything above correct? Start installation now?" NO); then
-	printf "[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  Aborting installation!\n"
-	exit 3
-fi
-
-# -------------------------------- start installation -------------------------
-# -----------------------------------------------------------------------------
-
-## ------------------------------- install xorg, x11-fonts, set keyboard ------
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XORG${COLOR_NC}...\n"
+### ------------------------ install xorg, x11-fonts, set keyboard -------------
+{
 install_packages xorg
 install_fonts
 set_xkeyboard
 
-# ------------------------- add users to group video for accelerated video ---- 
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Add users to the ${COLOR_CYAN}video${COLOR_NC} group\n"
-for i in `awk -F: '($3 >= 1001) && ($3 != 65534) { print $1 }' /etc/passwd`; 
-		do 
-			pw groupmod video -m $i  2>&1
-		done
-pw groupshow video | awk -v nc=$COLOR_NC -v cyan=$COLOR_CYAN  -v green=$COLOR_GREEN -F: '{printf "[ "green "INFO" nc " ]  Group: "cyan $1 nc"\tGID: " cyan $3 nc "\tMembers: " cyan $4 nc"\n"}'
+## ------------------------- add users to group video for accelerated video ----
+add_users_group video
 
-# --------------------------- update rc.conf ----------------------------------
-# --------------- start moused daemon to support mouse operation in X11 -------
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/etc/rc.conf${COLOR_NC}\n" 
-sysrc moused_enable="YES"
+## --------------- start moused daemon to support mouse operation in X11 -------
+update_rc_conf moused_enable 
 
-
-# ------------------------------------ install X11 video driver ---------------
-# --------------------- only nvidea and VMWare video drivers are supportet ----
+## ------------------------------------ install X11 video driver ---------------
+## --------------------- only nvidea and VMWare video drivers are supportet ----
 install_video_driver
 
-
-# ------------------------- install xfce4, lightdm + i3lock, xdg-user-dirs -------------
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XFCE Desktop Environment with LightDM GTK+ Greeter.${COLOR_NC}...\n"
-# pkg install -y xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings i3lock
+## ------------------------- install xfce4, lightdm + i3lock, xdg-user-dirs -------------
+printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XFCE Desktop Environment with LightDM GTK+ Greeter${COLOR_NC} ...\n"
+## pkg install -y xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings i3lock
 install_packages xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings i3lock
 
-# ------------------------------------ update rc.conf -------------------------
-# ------------------------------------ start lightdm --------------------------
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/etc/rc.conf${COLOR_NC}\n" 
-sysrc lightdm_enable="YES"
+## ------------------------------------ start lightdm --------------------------
+update_rc_conf lightdm_enable
 
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing  ${COLOR_CYAN}XDG user directories${COLOR_NC}...\n"
-#pkg install xdg-user-dirs
+## -------------------------- install XDG user directories ---------------------
+##pkg install xdg-user-dirs
 install_packages xdg-user-dirs
 
-# ------------------------------------ install xfce panel plugins -------------
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Whiskermenu${COLOR_NC} for Xfce Desktop Environment...\n"
-# pkg install -y xfce4-whiskermenu-plugin
-install_packages xfce4-whiskermenu-plugin
-		
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Thunar Archive Plugin${COLOR_NC}...\n"
-install_packages thunar-archive-plugin
+## ------------------------------------ install xfce panel plugins -------------
+install_packages xfce4-whiskermenu-plugin thunar-archive-plugin xfce4-weather-plugin dsbmixer
 
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Weather plugin for the Xfce panel${COLOR_NC}...\n"
-install_packages xfce4-weather-plugin
-
-# --------------- xfce4-mixer not supported therefore install DSNMixer --------
-install_packages dsbmixer
-
-# ------------------------------------ install Matcha and Arc themes ---------
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XFCE GTK themes: Matcha and Arc${COLOR_NC}...\n"
-# pkg install -y matcha-gtk-themes gtk-arc-themes
+## ------------------------------------ install Matcha and Arc themes ---------
+printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XFCE GTK themes: Matcha and Arc${COLOR_NC} ...\n"
 install_packages matcha-gtk-themes gtk-arc-themes
 
+## ------------------------------------- update rc.conf, enable dbus -----------
+## xfce uses D-Bus as message bus and it must be enabled in /etc/rc.conf be started when the system boots
+update_rc_conf dbus_enable
 
-# ------------------------------------- update rc.conf, enable dbus -----------
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/etc/rc.conf${COLOR_NC}\n" 
-# xfce uses D-Bus for a message bus and must ve enable it in /etc/rc.conf so it will be started when the system boots
-sysrc dbus_enable="YES"
-
-# ---------- fetch wallpaper wallpaper for Xfce --------------- 
+## ----------------------- fetch wallpaper wallpaper for Xfce ----------------- 
 fetch_wallpaper
 
-
-# ----------------------- Setup Users and Desktop Environment -----------------
-# -----------------------------------------------------------------------------
+## ----------------------- Create skel templates in /usr/share/skel ------------
 set_skel_template
-set_lightdm_greeter
+ 
+## -------------------------- install applications & utilities -----------------
+install_packages $APP_LIST 
+install_packages $UTILITY_LIST
+enable_rkhunter	# Keep your rkhunter database up-to-date ans schedule daily security check
+} 2>&1 | tee -a $LOGFILE
 
 
-# ------------------------------ install applications--------------------------
-# -----------------------------------------------------------------------------
-install_editors () {
-	if [ "$INSTALL_EDITOR" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Vim${COLOR_NC}...\n"
-		install_packages vim
-	fi
-}
-install_editors
+## -----------------------------------------------------------------------------
+## ----------------------- Post installation tasks -----------------------------
 
+# ------------------------- System hardening options --------------------------
+checklist_system_hardening
+# -------------------------------- IPFW firewall -------------------------------
+yesno_ipfw # Use predifined ipfw firewall?
 
-install_gimp () {
-	if [ "$INSTALL_GIMP" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Gimp${COLOR_NC}...\n"
-		install_packages gimp
-	fi
-}
-install_gimp
-
-
-install_browser () {
-	if [ "$INSTALL_BROWSER" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Firefox${COLOR_NC}...\n"
-		install_packages firefox
-	fi
-}
-install_browser
-
-
-install_multimedia () {
-	if [ "$INSTALL_AUDIOPLAYER" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Audacious${COLOR_NC}...\n"
-		install_packages audacious
-	fi
-	
-	if [ "$INSTALL_MPV" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}mvp${COLOR_NC}...\n"
-		install_packages mpv
-	fi
-
-	if [ "$INSTALL_IMAGEVIEWER" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Ristretto${COLOR_NC}...\n"
-		install_packages ristretto 
-	fi
-
-	if [ "$INSTALL_SHOTWELL" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Shotwell${COLOR_NC}...\n"
-		install_packages shotwell
-	fi
-
-	if [ "$INSTALL_VLC" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}VLC${COLOR_NC}...\n"
-		install_packages vlc
-	fi
-}
-install_multimedia
-
-
-install_office () {
-	if [ "$INSTALL_OFFICE" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Libre Office${COLOR_NC}...\n"
-		install_packages libreoffice
-	fi
-}
-install_office
-
-
-install_mail () {
-	if [ "$INSTALL_MAIL" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Thunderbird${COLOR_NC}...\n"
-		install_packages thunderbird
-	fi
-}
-install_mail
-
-
-# -------------------------------- printing, only network printer -----------------------------------
-	if [ "$INSTALL_CUPS" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}Common UNIX Printing System (CUPS)${COLOR_NC}...\n"
-		install_packages cups
-		sysrc cupsd_enable="YES"
-		pw usermod root -G cups
-	fi
-
-
-install_keepass () {
-	if [ "$INSTALL_KEEPASS" -eq 0 ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}KeePassXC${COLOR_NC}...\n"
-		install_packages keepassxc
-	fi
-}
-install_keepass
-
-
-# ------------------------------------ utilities ------------------------------
-if [ "$INSTALL_UTILITIES" -eq 0 ]; then
-	install_utilities
-fi
-
-
-# -----------------------------------------------------------------------------
-# ----------------------- Post installation tasks -----------------------------
+{
+# ------------------------- System hardening options --------------------------
+system_hardening
+# ------------------------- enable IPFW firewall ------------------------------ 
+enable_ipfw_firewall
 
 # Daily check for FreeBSD and package updates
 daily_check_for_updates
-
-# Enable the predefined ipfw firewall
-enable_ipfw_firewall
-
-#Some FreeBSD security settings (not entirely!)
-system_hardening
 
 # ------------------------ Intel and AMD CPUs microcode updates ---------------
 install_cpu_microcode_updates
@@ -1131,16 +1566,11 @@ silent_boot_messages
 # -------------- Specify the maximum desired resolution for the EFI console ---
 sysrc -f /boot/loader.conf efi_max_resolution=$SCREEN_SIZE
 
-
-
+} 2>&1 | tee -a $LOGFILE
 # ------------------------------------ reboot FreeBSD --------------------------
-# -----------------------------------------------------------------------------
-printf "\n[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  ${COLOR_CYAN}Update is completed. Please reboot FreeBSD!${COLOR_NC}\n"
-if !(yes_no "Reboot FreeBSD now?" NO); then
-	printf "\n[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  Installation is completed - System must be rebooted!\n"
-else
-	 shutdown -r +10s "FreeBSD will reboot!"
-fi
+sleep 1
+yesno_reboot
+reboot_freebsd 2>&1 | tee -a $LOGFILE
 
 # ----------------------------------End of file--------------------------------
 # -----------------------------------------------------------------------------
