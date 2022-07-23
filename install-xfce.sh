@@ -33,7 +33,9 @@ LOGFILE=$(pwd)"/"$(basename $0 sh)"log"
 SCREEN_SIZE='2560x1440'	# Required for VMWare and used for the EFI console			
 
 # Delay in seconds before autobooting FreeBSD
-AUTOBOOTDELAY='5'
+AUTOBOOTDELAY='5'	# Delay in seconds before FreeBSD will automatically boot
+SYSTEM_BELL='off'	# Turn off system bell in X11
+
 
 # Initialize values for language and country code, keyboard layout, Charset
 LOCALE='de_DE.UTF-8'	# LanguageCode_CountryCode.Encoding;set default to German, Germany, UTF-8
@@ -254,7 +256,7 @@ menubox_xkeyboard () {
 	# ----------------- fetch a list of  XKB data description files -----------
 
 	cd /tmp
-	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/xkeyboard_config; then
+	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/xkeyboard_layout; then
 		
 		# ----------------------- Keyboard layout -----------------------------
 		# Select ! layout paragraph from xkeyboard_layout file
@@ -1432,14 +1434,25 @@ install_cpu_microcode_updates () {
 
 # --------------------------- silence the boot messages -----------------------
 silent_boot_messages () {
-printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set FreeBSD ${COLOR_CYAN}boot delay${COLOR_NC} to 5 seconds\n"
-sysrc -f /boot/loader.conf autoboot_delay="$AUTOBOOTDELAY" 		# Delay in seconds before autobooting
-#sysrc -f /boot/loader.conf boot_mute="YES"	# Mute the content
+	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set FreeBSD ${COLOR_CYAN}boot delay${COLOR_NC} to 5 seconds\n"
+	sysrc -f /boot/loader.conf autoboot_delay="$AUTOBOOTDELAY" 		# Delay in seconds before autobooting
+	#sysrc -f /boot/loader.conf boot_mute="YES"	# Mute the content
 
-							# rc_startmsgs
-#sysrc rc_startmsgs="NO"	# for troubleshooting issues, most boot messages can be found under:
-							# dmesg 
-							# (cat|tail|grep|less|more..) /var/log/messages
+					# rc_startmsgs
+	#sysrc rc_startmsgs="NO"	# for troubleshooting issues, most boot messages can be found under:
+					# dmesg 
+					# (cat|tail|grep|less|more..) /var/log/messages
+}
+
+
+# --------------------------- silence the boot messages -----------------------
+system_bell_off () {
+	# Turn system bell off by default
+	if [ $SYSTEM_BELL = 'off' ]; then
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Turn ${COLOR_CYAN}off${COLOR_NC} system bell in X11 ...\n"
+		echo "xset b off" >> /usr/share/skel/dot.xinitrc
+	fi
+
 }
 
 
@@ -1559,9 +1572,9 @@ daily_check_for_updates
 # ------------------------ Intel and AMD CPUs microcode updates ---------------
 install_cpu_microcode_updates
 
-# --------------------------- silence the boot messages -----------------------
+# ---------- silence the boot messages, turn of system bell in X --------------
 silent_boot_messages 
-
+system_bell_off
 
 # -------------- Specify the maximum desired resolution for the EFI console ---
 sysrc -f /boot/loader.conf efi_max_resolution=$SCREEN_SIZE
