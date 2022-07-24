@@ -1544,6 +1544,9 @@ fetch_wallpaper
 
 ## ----------------------- Create skel templates in /usr/share/skel ------------
 set_skel_template
+
+## ----------------------- Tweak lightdm --------------------------------------
+set_lightdm_greeter
  
 ## -------------------------- install applications & utilities -----------------
 install_packages $APP_LIST 
