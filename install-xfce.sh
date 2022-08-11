@@ -751,6 +751,34 @@ add_login_class () {
 }
 
 
+# ------------- Adapt /etc/login.conf to have the choosen language in xfce ---- 
+# ------------------------logging in via lightdm gtk greeter ------------------
+change_login_conf_gtk_greeter () {
+	FILE="/etc/login.conf"
+
+	DATE=`date "+%Y%m%d_%H%M%S"`
+	if [ -f $FILE ]; then	# /etc/login.conf exists?
+		cp /etc/login.conf /etc/login.conf.$DATE #backup
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  ######Create backup of ${COLOR_CYAN}/etc/login.conf${COLOR_NC}. File: ${COLOR_CYAN}/etc/login.conf.$DATE${COLOR_NC}\n"
+	
+		# sed script to change ":lang=C.UTF-8:" to e.g. ":lang=de_DE.UTF-8" only on the first occurrence
+		sed -i .bak -e '1{x;s/^/first/;x;}' \
+			-e "1,/:lang=.*:/{x;/first/s///;x;s/:lang=.*:/:lang=${LOCALE}:/;}"  $FILE
+					
+		# prevent multiple value: lang=C.UTF-8 in root class name if script exucute twice, (just delete existing lang=C.UTF-8) 				  
+		sed -i .bak  '/^root/,/default/{/lang=C.UTF-8/d;}' $FILE
+	
+		# add lang=C.UTF-8 in root class name, Root can always login
+		sed -i .bak '/^root:/,/:tc=default:/ s/:tc=default:/:lang=C.UTF-8:\\\n\t:tc=default:/' $FILE
+	
+		cap_mkdb /etc/login.conf
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set ${COLOR_CYAN}lang=$LOCALE${COLOR_NC}  in default section of ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Added ${COLOR_CYAN}lang=C.UTF-8{COLOR_NC} in root name classe  section in ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
+
+	fi
+}                                                                                                                                                                                                       
+
+
 # ------------------------------------ set login class for ALL users ----
 set_login_class () {
 	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set language settings (language code, country code and encoding) for ${COLOR_CYAN}ALL${COLOR_NC} users to ${COLOR_CYAN}${LANGUAGE_NAME}${COLOR_NC} ...\n"
@@ -1491,6 +1519,7 @@ set_umask
 set_localization
 add_login_class
 set_login_class
+change_login_conf_gtk_greeter
 freebsd_update
 install_pkg
 switch_to_latest_repository $REPOSITORY # Quarterly or latest package branches 
