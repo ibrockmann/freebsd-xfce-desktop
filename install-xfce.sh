@@ -772,8 +772,8 @@ change_login_conf_gtk_greeter () {
 		sed -i .bak '/^root:/,/:tc=default:/ s/:tc=default:/:lang=C.UTF-8:\\\n\t:tc=default:/' $FILE
 	
 		cap_mkdb /etc/login.conf
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set ${COLOR_CYAN}lang=$LOCALE${COLOR_NC}  in default section of ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Added ${COLOR_CYAN}lang=C.UTF-8{COLOR_NC} in root name classe  section in ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set ${COLOR_CYAN}lang=$LOCALE${COLOR_NC} in default section of ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Added ${COLOR_CYAN}lang=C.UTF-8${COLOR_NC} in root name classe section in ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
 
 	fi
 }                                                                                                                                                                                                       
