@@ -756,10 +756,7 @@ add_login_class () {
 change_login_conf_gtk_greeter () {
 	FILE="/etc/login.conf"
 
-	DATE=`date "+%Y%m%d_%H%M%S"`
 	if [ -f $FILE ]; then	# /etc/login.conf exists?
-		cp /etc/login.conf /etc/login.conf.$DATE #backup
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  ######Create backup of ${COLOR_CYAN}/etc/login.conf${COLOR_NC}. File: ${COLOR_CYAN}/etc/login.conf.$DATE${COLOR_NC}\n"
 	
 		# sed script to change ":lang=C.UTF-8:" to e.g. ":lang=de_DE.UTF-8" only on the first occurrence
 		sed -i .bak -e '1{x;s/^/first/;x;}' \
@@ -774,14 +771,13 @@ change_login_conf_gtk_greeter () {
 		cap_mkdb /etc/login.conf
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set ${COLOR_CYAN}lang=$LOCALE${COLOR_NC} in default section of ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Added ${COLOR_CYAN}lang=C.UTF-8${COLOR_NC} in root name classe section in ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
-
 	fi
 }                                                                                                                                                                                                       
 
 
 # ------------------------------------ set login class for ALL users ----
 set_login_class () {
-	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set language settings (language code, country code and encoding) for ${COLOR_CYAN}ALL${COLOR_NC} users to ${COLOR_CYAN}${LANGUAGE_NAME}${COLOR_NC} ...\n"
+	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set language settings (language code, country code and encoding) for ${COLOR_CYAN}ALL${COLOR_NC} users to ${COLOR_CYAN}${LANGUAGE_NAME}${COLOR_NC}.\n"
 				
 		for i in `awk -F: '($3 >= 1001) && ($3 != 65534) { print $1 }' /etc/passwd`; 
 		do 
@@ -1026,8 +1022,15 @@ set_skel_template () {
 	# Start Xfce from the command line by typing startx 
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create default configuration files in ${COLOR_CYAN}/usr/share/skel/dot.xinitrc${COLOR_NC} in order to start Xfce from the command line\n"
 		echo ". /usr/local/etc/xdg/xfce4/xinitrc" > /usr/share/skel/dot.xinitrc
+		
+		# Turn system bell off by default
+		if [ $SYSTEM_BELL = 'off' ]; then
+			printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Turn ${COLOR_CYAN}off${COLOR_NC} system bell in X11 ...\n"
+			echo "xset b off" >> /usr/share/skel/dot.xinitrc
+		fi
+		
 	
-	# populate	users with the content of the skeleton directory - /usr/share/skel/dot.xinitrc
+	# populate users with the content of the skeleton directory - /usr/share/skel/dot.xinitrc
 	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create ${COLOR_CYAN}~/.xinitrc${COLOR_NC} in users home directory in order to start Xfce from the command line by typing startx.\n"
 	for i in `awk -F: '($3 >= 1001) && ($3 != 65534) { print $1 }' /etc/passwd`; 
 		do 
@@ -1403,7 +1406,7 @@ enable_ipfw_firewall () {
 	if [ FIREWALL_ENABLE = "YES" ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Enable the predefined ipfw firewall ...\n"
 		sysrc firewall_enable="YES"				# Enable the predefined ipfw firewall 			
-		sysrc firewall_type="workstation"		# Overwrite setting from dialog; protects only this machine using stateful rules
+		sysrc firewall_type="workstation"			# Overwrite setting from dialog; protects only this machine using stateful rules
 		if [ FIRWWALL_QUIET = "YES" ]; then
 			sysrc firewall_quiet="YES" 			# suppress rule display
 		fi
@@ -1420,7 +1423,7 @@ enable_ipfw_firewall () {
 
 enable_rkhunter () {
 	
-	if pkg info | grep -q rkhunter; then 	# Check if FreeBSD package rkhunter is installed
+	if pkg info | grep -q rkhunter; then 			# Check if FreeBSD package rkhunter is installed
 		FILE="/etc/periodic.conf"			# this file contains local overrides for the default periodic configuration
 
 		if [ ! -f $FILE ]; then   			# /etc/periodic.conf exists?
