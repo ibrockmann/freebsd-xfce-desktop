@@ -34,7 +34,6 @@ SCREEN_SIZE='2560x1440'	# Required for VMWare and used for the EFI console
 
 # Delay in seconds before autobooting FreeBSD
 AUTOBOOTDELAY='5'	# Delay in seconds before FreeBSD will automatically boot
-SYSTEM_BELL='off'	# Turn off system bell in X11
 
 
 # Initialize values for language and country code, keyboard layout, Charset
@@ -1020,16 +1019,10 @@ fetch_wallpaper () {
 # ---------------------------- create skel templates - /usr/share/skel  -------
 set_skel_template () {
 	# Start Xfce from the command line by typing startx 
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create default configuration files in ${COLOR_CYAN}/usr/share/skel/dot.xinitrc${COLOR_NC} in order to start Xfce from the command line\n"
-		echo ". /usr/local/etc/xdg/xfce4/xinitrc" > /usr/share/skel/dot.xinitrc
+	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create default configuration files in ${COLOR_CYAN}/usr/share/skel/dot.xinitrc${COLOR_NC} in order to start Xfce from the command line\n"
+	echo ". /usr/local/etc/xdg/xfce4/xinitrc" > /usr/share/skel/dot.xinitrc
 		
-		# Turn system bell off by default
-		if [ $SYSTEM_BELL = 'off' ]; then
-			printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Turn ${COLOR_CYAN}off${COLOR_NC} system bell in X11 ...\n"
-			echo "xset b off" >> /usr/share/skel/dot.xinitrc
-		fi
-		
-	
+			
 	# populate users with the content of the skeleton directory - /usr/share/skel/dot.xinitrc
 	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create ${COLOR_CYAN}~/.xinitrc${COLOR_NC} in users home directory in order to start Xfce from the command line by typing startx.\n"
 	for i in `awk -F: '($3 >= 1001) && ($3 != 65534) { print $1 }' /etc/passwd`; 
@@ -1476,17 +1469,6 @@ silent_boot_messages () {
 }
 
 
-# --------------------------- silence the boot messages -----------------------
-system_bell_off () {
-	# Turn system bell off by default
-	if [ $SYSTEM_BELL = 'off' ]; then
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Turn ${COLOR_CYAN}off${COLOR_NC} system bell in X11 ...\n"
-		echo "xset b off" >> /usr/share/skel/dot.xinitrc
-	fi
-
-}
-
-
 ## ----------------------------------------------------------------------------
 ## ----------------------------------- Main -----------------------------------
 ## ----------------------------------------------------------------------------
@@ -1609,7 +1591,6 @@ install_cpu_microcode_updates
 
 # ---------- silence the boot messages, turn of system bell in X --------------
 silent_boot_messages 
-system_bell_off
 
 # -------------- Specify the maximum desired resolution for the EFI console ---
 sysrc -f /boot/loader.conf efi_max_resolution=$SCREEN_SIZE
