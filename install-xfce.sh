@@ -562,10 +562,10 @@ do
 	  --form "Configuring a simple IPFW firewall:" \
 		15 50 0 \
 		"Firewall type: "		1 1 "workstation"			1 22 11 0 "Configuring a firewall using stateful rules." \
-		"Firewall quiete: " 	2 1 "YES"					2 22  3 0 "Don't log to standard output" \
-		"My services: "			3 1	"$FIREWALL_MYSERVICES"		3 22 50 0 "List of services, separated by spaces, that should be accessible on your computer" \
-		"Allow services: " 		4 1	"$FIREWALL_ALLOWSERVICE"	4 22 50 0 "List of IPs that should be allowed to access the provided services" \
-		"Firewall log deny:	" 	5 1 "YES"				5 22  3 0 "Logs all connection attempts that are denied to /var/log/security" \
+		"Firewall quiete: " 		2 1 "YES"				2 22  3 0 "Don't log to standard output" \
+		"My services: "			3 1 "$FIREWALL_MYSERVICES"		3 22 50 0 "List of services, separated by spaces, that should be accessible on your computer" \
+		"Allow services: " 		4 1 "$FIREWALL_ALLOWSERVICE"		4 22 50 0 "List of IPs that should be allowed to access the provided services" \
+		"Firewall log deny: "	 	5 1 "YES"				5 22  3 0 "Logs all connection attempts that are denied to /var/log/security" \
 	2>&1 1>&3`
 	returncode=$?
 	exec 3>&-
@@ -760,16 +760,17 @@ change_login_conf_gtk_greeter () {
 		# sed script to change ":lang=C.UTF-8:" to e.g. ":lang=de_DE.UTF-8" only on the first occurrence
 		sed -i .bak -e '1{x;s/^/first/;x;}' \
 			-e "1,/:lang=.*:/{x;/first/s///;x;s/:lang=.*:/:lang=${LOCALE}:/;}"  $FILE
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set ${COLOR_CYAN}lang=$LOCALE${COLOR_NC} in default section of ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
 					
 		# prevent multiple value: lang=C.UTF-8 in root class name if script exucute twice, (just delete existing lang=C.UTF-8) 				  
 		sed -i .bak  '/^root/,/default/{/lang=C.UTF-8/d;}' $FILE
 	
 		# add lang=C.UTF-8 in root class name, Root can always login
 		sed -i .bak '/^root:/,/:tc=default:/ s/:tc=default:/:lang=C.UTF-8:\\\n\t:tc=default:/' $FILE
-	
-		cap_mkdb /etc/login.conf
-		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set ${COLOR_CYAN}lang=$LOCALE${COLOR_NC} in default section of ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Added ${COLOR_CYAN}lang=C.UTF-8${COLOR_NC} in root name classe section in ${COLOR_CYAN}/etc/login.conf${COLOR_NC}\n"
+		
+		cap_mkdb /etc/login.conf
+		rm ${FILE}.bak # Delete backup file
 	fi
 }                                                                                                                                                                                                       
 
@@ -796,6 +797,7 @@ freebsd_update () {
 
 # ------------------------------------ pkg installation ----------------------------
 install_pkg () {
+
 	if [ "$INSTALL_PKG" -eq 1 ] ; then
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Bootstrapping pkg\n\n"
 		env ASSUME_ALWAYS_YES=YES /usr/sbin/pkg
@@ -1018,17 +1020,27 @@ fetch_wallpaper () {
 
 # ---------------------------- create skel templates - /usr/share/skel  -------
 set_skel_template () {
+	
+	FILE="/usr/share/skel/dot.shrc"
+	
 	# Start Xfce from the command line by typing startx 
 	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create default configuration files in ${COLOR_CYAN}/usr/share/skel/dot.xinitrc${COLOR_NC} in order to start Xfce from the command line\n"
 	echo ". /usr/local/etc/xdg/xfce4/xinitrc" > /usr/share/skel/dot.xinitrc
+	
+	# Set umask in .shrc to umask 027 (rwx-xr--)
+	# login.conf is not execute by lightdm when starting X11
 		
-			
+	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set umask=027 in ${COLOR_CYAN}/usr/share/skel/dot.shrc${COLOR_NC}\n"
+	sed -i .bak -e 's/^# file permissions: rwxr-xr-x/# file permissions: rwxr-xr--/' \
+		-e 's/^# umask	022/umask 027/' $FILE
+		
+	rm ${FILE}.bak # Delete backup file
+	
 	# populate users with the content of the skeleton directory - /usr/share/skel/dot.xinitrc
 	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create ${COLOR_CYAN}~/.xinitrc${COLOR_NC} in users home directory in order to start Xfce from the command line by typing startx.\n"
 	for i in `awk -F: '($3 >= 1001) && ($3 != 65534) { print $1 }' /etc/passwd`; 
 		do 
 			pw usermod -m -n $i  2>&1
-			ls -laFo /home/$i | grep .xinitrc
 		done
 }
 
@@ -1055,11 +1067,11 @@ patch_lockscreen_theme () {
 		#}		
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Patching ${COLOR_CYAN}${FILE}${COLOR_NC} ...\n"
        
-	    # sed '/Beginn/,/Ende/ s/alt/NEU/' inputfile
+		# sed '/Beginn/,/Ende/ s/alt/NEU/' inputfile
 		sed -i .bak '/#buttonbox_frame {/,/}/ s/background-color:.*/background-color: rgba(0, 35, 44, 0.95);/' $FILE
 	   
 	   
-	    ##buttonbox_frame button {
+		##buttonbox_frame button {
 		#color: #c6cdcb;
 		#border-color: rgba(0, 0, 0, 0.95);
 		#background-color: rgba(34, 42, 45, 0.95); --> rgba(198, 208,203, 0.1);
@@ -1073,6 +1085,8 @@ patch_lockscreen_theme () {
 		#background-color: rgba(198, 205, 203, 0.1); --> background-color: rgba(86, 106, 111, 0.42);
 		#}
 	   	sed -i .bak '/buttonbox_frame button:hover {/,/}/ s/background-color:.*/background-color: rgba(86, 106, 111, 0.42);/' $FILE
+		
+		rm ${FILE}.bak # Delete backup file
     
     else
         printf "\n[ ${COLOR_RED}ERROR${COLOR_NC} ] ${COLOR_CYAN}${FILE}${COLOR_NC} does not exist!\n"
@@ -1354,10 +1368,10 @@ system_hardening () {
 					echo 'net.inet.udp.blackhole=1'	>> $FILE		# Don't answer on closed UDP ports (default 0)
 					;;
 				use_tempaddr)
-					echo 'net.inet6.ip6.use_tempaddr=1'	>> $FILE	# Enable privacy settings for IPv6 (RFC 3041)
+					echo 'net.inet6.ip6.use_tempaddr=1' >> $FILE		# Enable privacy settings for IPv6 (RFC 3041)
 					;;
 				prefer_privaddr)
-					echo 'net.inet6.ip6.prefer_tempaddr=1' 	>> $FILE	# refer privacy addresses and use them over the normal addresses
+					echo 'net.inet6.ip6.prefer_tempaddr=1' >> $FILE		# refer privacy addresses and use them over the normal addresses
 					;;
 				# /etc/rc.conf
 				clear_tmp)
@@ -1396,18 +1410,18 @@ system_hardening () {
 # -------------------------------------- Firewall -----------------------------
 enable_ipfw_firewall () {
 
-	if [ FIREWALL_ENABLE = "YES" ]; then
+	if [ $FIREWALL_ENABLE = "YES" ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Enable the predefined ipfw firewall ...\n"
 		sysrc firewall_enable="YES"				# Enable the predefined ipfw firewall 			
 		sysrc firewall_type="workstation"			# Overwrite setting from dialog; protects only this machine using stateful rules
-		if [ FIRWWALL_QUIET = "YES" ]; then
+		if [ $FIRWWALL_QUIET = "YES" ]; then
 			sysrc firewall_quiet="YES" 			# suppress rule display
 		fi
 		sysrc firewall_myservices="$FIREWALL_MYSERVICES"
 		sysrc firewall_allowservices="$FIREWALL_ALLOWSERVICE"
 
 		# log denied packets to /var/log/security
-		if [ FIREWALL_LOGDENY ="YES" ]; then
+		if [ $FIREWALL_LOGDENY = "YES" ]; then
 			sysrc firewall_logdeny="YES"
 		fi
 	fi
@@ -1495,17 +1509,24 @@ checklist_applications
 checklist_utilities
 radiolist_repository_branch
 yesno_summary
-add_user
 
 {
 display_system_info
-check_pkg_activation
+freebsd_update
 set_umask
 set_localization
 add_login_class
-set_login_class
 change_login_conf_gtk_greeter
-freebsd_update
+
+## ----------------------- Create skel templates in /usr/share/skel ------------
+set_skel_template
+} 2>&1 | tee -a $LOGFILE
+
+add_user
+
+{
+set_login_class
+check_pkg_activation
 install_pkg
 switch_to_latest_repository $REPOSITORY # Quarterly or latest package branches 
 } 2>&1 | tee -a $LOGFILE
@@ -1580,6 +1601,7 @@ yesno_ipfw # Use predifined ipfw firewall?
 {
 # ------------------------- System hardening options --------------------------
 system_hardening
+
 # ------------------------- enable IPFW firewall ------------------------------ 
 enable_ipfw_firewall
 
