@@ -1021,19 +1021,27 @@ fetch_wallpaper () {
 # ---------------------------- create skel templates - /usr/share/skel  -------
 set_skel_template () {
 	
-	FILE="/usr/share/skel/dot.shrc"
+	FILE="/usr/share/skel/dot.profile"
 	
 	# Start Xfce from the command line by typing startx 
 	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create default configuration files in ${COLOR_CYAN}/usr/share/skel/dot.xinitrc${COLOR_NC} in order to start Xfce from the command line\n"
 	echo ". /usr/local/etc/xdg/xfce4/xinitrc" > /usr/share/skel/dot.xinitrc
 	
-	# Set umask in .shrc to umask 027 (rwx-xr--)
+	# Set umask in .profile to umask 027 (rwx-xr--)
 	# login.conf is not execute by lightdm when starting X11
 		
-	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set umask=027 in ${COLOR_CYAN}/usr/share/skel/dot.shrc${COLOR_NC}\n"
-	sed -i .bak -e 's/^# file permissions: rwxr-xr-x/# file permissions: rwxr-xr--/' \
-		-e 's/^# umask	022/umask 027/' $FILE
-		
+	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set umask=027 in ${COLOR_CYAN}$FILE${COLOR_NC}\n"
+	
+	# Pattern: sed '/line/ { N ; /something/ d }' test, 
+	# if this script execute twice: delete rows # file permissions: rwxr-xr-- and umask 027  
+	sed -i .bak '/^# file permissions: rwxr-xr--/ {N;/umask 027/d;}' $FILE
+	
+	# add newline at end of file, if file ends without a newline
+	if [ "$(tail -n1 $FILE)" != "" ]; then echo "" >> $FILE; fi
+	
+	# Set umask to 027 in dot.profile
+	echo -e "# file permissions: rwxr-xr--\numask 027" >> $FILE
+			
 	rm ${FILE}.bak # Delete backup file
 	
 	# populate users with the content of the skeleton directory - /usr/share/skel/dot.xinitrc
@@ -1576,9 +1584,6 @@ update_rc_conf dbus_enable
 
 ## ----------------------- fetch wallpaper wallpaper for Xfce ----------------- 
 fetch_wallpaper
-
-## ----------------------- Create skel templates in /usr/share/skel ------------
-set_skel_template
 
 ## ----------------------- Tweak lightdm --------------------------------------
 set_lightdm_greeter
