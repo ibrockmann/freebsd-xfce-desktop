@@ -30,7 +30,7 @@
 # Logfile  
 LOGFILE=$(pwd)"/"$(basename $0 sh)"log" 
 
-SCREEN_SIZE='2560x1440'	# Required for VMWare and used for the EFI console			
+SCREEN_SIZE='2560x1440'	# Required for VMWare and used for the EFI console		
 
 # Delay in seconds before autobooting FreeBSD
 AUTOBOOTDELAY='5'	# Delay in seconds before FreeBSD will automatically boot
@@ -749,6 +749,9 @@ add_login_class () {
 	fi
 }
 
+# ----------------------------------------- NOT USED --------------------------
+# Function not used at the moment -  use Shell Startup File Method to set language
+# in xfce4; set LANG and MM_CHARSET via skel in ~/.profile
 
 # ------------- Adapt /etc/login.conf to have the choosen language in xfce ---- 
 # ------------------------logging in via lightdm gtk greeter ------------------
@@ -789,6 +792,8 @@ set_login_class () {
 
 # ------------------------------------ freebsd update ----------------------------
 freebsd_update () {
+	
+	# PAGER=cat, pls see  # environment variables section above, therefore no user interaction needed
 	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  FreeBSD Update: Applying latest FreeBSD security patches\n\n"
 	freebsd-update fetch
 	freebsd-update install
@@ -986,7 +991,19 @@ case $VGA_CARD in
 		install_packages nvidia-driver nvidia-settings nvidia-xconfig
 		
 		# run nvidia autoconfig
-		nvidia-xconfig
+		# nvidia-xconfig		# nvidia-xconfig will not be used 
+		 
+		# Set nvidia driver in /usr/local/etc/X11/xorg.conf.d
+		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create configuration file for NVIDIA driver in ${COLOR_CYAN}/usr/local/etc/X11/xorg.conf.d/driver-nvidia.conf${COLOR_NC}\n"
+		mkdir -p /usr/local/etc/X11/xorg.conf.d
+		chmod 755 /usr/local/etc/X11/xorg.conf.d
+		echo "Section \"Device\"
+		  Identifier 		\"Card0\"
+		  Driver	 	\"nvidia\"
+EndSection" > /usr/local/etc/X11/xorg.conf.d/driver-nvidia.conf
+	  
+		chmod 644 /usr/local/etc/X11/xorg.conf.d/driver-nvidia.conf
+		
 		
 		# ---- update rc.conf, nvidia drivers - to load the kernel modules at boot ---
 		# linux.ko and nvidia.ko will be loaded as dependency of nvidia-modeset.ko
@@ -1021,34 +1038,48 @@ fetch_wallpaper () {
 # ---------------------------- create skel templates - /usr/share/skel  -------
 set_skel_template () {
 	
+	DATE=`date "+%Y%m%d_%H%M%S"`
 	FILE="/usr/share/skel/dot.profile"
 	
+	# ---------------------- /usr/share/skel/dot.xinitrc ------------------
 	# Start Xfce from the command line by typing startx 
 	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create default configuration files in ${COLOR_CYAN}/usr/share/skel/dot.xinitrc${COLOR_NC} in order to start Xfce from the command line\n"
 	echo ". /usr/local/etc/xdg/xfce4/xinitrc" > /usr/share/skel/dot.xinitrc
 	
-	# Set umask in .profile to umask 027 (rwx-xr--)
+	# ---------------------- /usr/share/skel/dot.profile ------------------
+	# Set umask in .profile to umask 027 (rwxr-x---)
 	# login.conf is not execute by lightdm when starting X11
 		
 	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set umask=027 in ${COLOR_CYAN}$FILE${COLOR_NC}\n"
 	
-	# Pattern: sed '/line/ { N ; /something/ d }' test, 
-	# if this script execute twice: delete rows # file permissions: rwxr-xr-- and umask 027  
-	sed -i .bak '/^# file permissions: rwxr-xr--/ {N;/umask 027/d;}' $FILE
+	# If this script runs several times: delete rows that has been inserted 
+	# Pattern: sed '/regexp/,$d', delete from regular expression to end of file
+	sed -i .bak '/^# file permissions: rwxr-x---/,$d' $FILE
 	
 	# add newline at end of file, if file ends without a newline
 	if [ "$(tail -n1 $FILE)" != "" ]; then echo "" >> $FILE; fi
 	
 	# Set umask to 027 in dot.profile
-	echo -e "# file permissions: rwxr-xr--\numask 027" >> $FILE
-			
+	echo -e "# file permissions: rwxr-x---\numask 027" >> $FILE
+	
+	# Set default locale to have the choosen language in xfce
+	# logging in via lightdm gtk greeter, 
+	# ~/.profile will be executed from lightdm's session-wrapper=/usr/local/etc/lightdm/Xsession
+	echo -e "\n# Set default locale\nLANG=${LOCALE}; export LANG\nMM_CHARSET=${CHARSET}; export MM_CHARSET" >> $FILE
+				
 	rm ${FILE}.bak # Delete backup file
 	
 	# populate users with the content of the skeleton directory - /usr/share/skel/dot.xinitrc
 	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create ${COLOR_CYAN}~/.xinitrc${COLOR_NC} in users home directory in order to start Xfce from the command line by typing startx.\n"
+	printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Create or replace ${COLOR_CYAN}~/.profile${COLOR_NC} in users home directory\n"
+	
 	for i in `awk -F: '($3 >= 1001) && ($3 != 65534) { print $1 }' /etc/passwd`; 
 		do 
+			if [ -f /usr/home/${i}/.profile ]; then
+				mv /usr/home/${i}/.profile /usr/home/${i}/.profile.$DATE
+			fi
 			pw usermod -m -n $i  2>&1
+			
 		done
 }
 
@@ -1478,16 +1509,35 @@ install_cpu_microcode_updates () {
 }
 
 
-# --------------------------- silence the boot messages -----------------------
-silent_boot_messages () {
+# --------------------- Fix micro stuttering on AMD Ryzen ---------------------
+
+fix_amd_ryzen_micro_stutter () {
+
+	# Fix issues with micro stutters on AMD Ryzen system 
+	# Stuttering in youtube videos, games, etc. on AMD Ryzen systems
+	# https://lists.freebsd.org/pipermail/freebsd-current/2021-March/079237.html
+	# Solution: sysctl kern.sched.steal_thresh=1
+
+	FILE="/etc/sysctl.conf"
+	sed -i .bak "/^kern.sched.steal_thresh=.*/d" $FILE
+	rm ${FILE}.bak
+	
+	CPU=$(sysctl -n hw.model)
+	MFT=$(echo ${CPU} | awk '{print $1}')
+	CPU_BRAND=$(echo ${CPU} | awk '{print $2}')
+	HYPERVISOR=$( sysctl -n hw.hv_vendor)
+
+	if [ $MFT = "AMD" ] && [ $CPU_BRAND = "Ryzen" ]; then
+		echo 'kern.sched.steal_thresh=1' >> $FILE
+	fi
+}
+
+
+# ------------------ Delay in seconds before automatically booting ------------
+set_autoboot_delay () {
 	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set FreeBSD ${COLOR_CYAN}boot delay${COLOR_NC} to 5 seconds\n"
 	sysrc -f /boot/loader.conf autoboot_delay="$AUTOBOOTDELAY" 		# Delay in seconds before autobooting
-	#sysrc -f /boot/loader.conf boot_mute="YES"	# Mute the content
-
-					# rc_startmsgs
-	#sysrc rc_startmsgs="NO"	# for troubleshooting issues, most boot messages can be found under:
-					# dmesg 
-					# (cat|tail|grep|less|more..) /var/log/messages
+	
 }
 
 
@@ -1524,7 +1574,6 @@ freebsd_update
 set_umask
 set_localization
 add_login_class
-change_login_conf_gtk_greeter
 
 ## ----------------------- Create skel templates in /usr/share/skel ------------
 set_skel_template
@@ -1559,10 +1608,10 @@ update_rc_conf moused_enable
 ## --------------------- only nvidea and VMWare video drivers are supportet ----
 install_video_driver
 
-## ------------------------- install xfce4, lightdm + i3lock, xdg-user-dirs -------------
+## ------------------------- install xfce4, lightdm, xdg-user-dirs -------------
 printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XFCE Desktop Environment with LightDM GTK+ Greeter${COLOR_NC} ...\n"
-## pkg install -y xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings i3lock
-install_packages xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings i3lock
+## pkg install -y xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings
+install_packages xfce lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings
 
 ## ------------------------------------ start lightdm --------------------------
 update_rc_conf lightdm_enable
@@ -1600,6 +1649,7 @@ enable_rkhunter	# Keep your rkhunter database up-to-date ans schedule daily secu
 
 # ------------------------- System hardening options --------------------------
 checklist_system_hardening
+
 # -------------------------------- IPFW firewall -------------------------------
 yesno_ipfw # Use predifined ipfw firewall?
 
@@ -1616,8 +1666,11 @@ daily_check_for_updates
 # ------------------------ Intel and AMD CPUs microcode updates ---------------
 install_cpu_microcode_updates
 
-# ---------- silence the boot messages, turn of system bell in X --------------
-silent_boot_messages 
+# --------------------- Fix micro stuttering on AMD Ryzen ---------------------
+fix_amd_ryzen_micro_stutter
+
+# ------------------ Delay in seconds before automatically booting ------------
+set_autoboot_delay 
 
 # -------------- Specify the maximum desired resolution for the EFI console ---
 sysrc -f /boot/loader.conf efi_max_resolution=$SCREEN_SIZE
