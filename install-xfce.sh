@@ -5,7 +5,7 @@
 # by ibrockmann, Version: 2.0
 # 
 # Notes: Installation of an Xfce 4.16 Desktop Environment with Matcha and 
-#  Arc GTK Themes on FreeBSD 13.1
+#  Arc GTK Themes on FreeBSD 13.x
 #
 # Display driver: Script supports current nvidia FreeBSD (X64) and VMware
 #  display driver only
@@ -401,7 +401,7 @@ Would you like to use the quarterly or latest version of FreeBSD packages?" 15 5
 }
 
 
-# ---------------------- Summary & abort installation ?  ----------------------
+# ----------------------- Summary & abort installation ------------------------
 yesno_summary () {
 
 	$DIALOG --clear --colors --backtitle "$BACKTITLE" \
@@ -750,7 +750,8 @@ add_login_class () {
 	fi
 }
 
-# ----------------------------------------- NOT USED --------------------------
+# ------------------------------------ NOT USED -------------------------------
+# -----------------------------------------------------------------------------
 # Function not used at the moment -  use Shell Startup File Method to set language
 # in xfce4; set LANG and MM_CHARSET via skel in ~/.profile
 
@@ -777,7 +778,8 @@ change_login_conf_gtk_greeter () {
 		rm ${FILE}.bak # Delete backup file
 	fi
 }                                                                                                                                                                                                       
-# ----------------------------------------- NOT USED --------------------------
+# -----------------------------------------------------------------------------
+# ------------------------------------ NOT USED -------------------------------
 
 
 # ------------------------------------ set login class for ALL users ----
