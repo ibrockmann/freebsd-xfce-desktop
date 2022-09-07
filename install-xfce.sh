@@ -42,6 +42,7 @@ LOCALE='de_DE.UTF-8'	# LanguageCode_CountryCode.Encoding;set default to German, 
 			# default-item in function menubox_language	
 
 INSTALL_CPU_MICROCODE_UPDATES=0	# Install Intel and AMD CPUs microcode updates and load updates automatically on a FreeBSD system startup
+				# 0 - do not install, 1 -  install Intel and AMD  CPUs microcode updates
 
 # -----------------------------------------------------------------------------
 # --------------------- Do not change anything from here on -------------------
@@ -776,6 +777,7 @@ change_login_conf_gtk_greeter () {
 		rm ${FILE}.bak # Delete backup file
 	fi
 }                                                                                                                                                                                                       
+# ----------------------------------------- NOT USED --------------------------
 
 
 # ------------------------------------ set login class for ALL users ----
@@ -1501,7 +1503,7 @@ install_cpu_microcode_updates () {
 	if [ "$INSTALL_CPU_MICROCODE_UPDATES" -eq 1 ]; then
 		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}devcpu-data${COLOR_NC} will allow host startup to update the CPU microcode on a FreeBSD system automatically ...\n"
 		install_packages devcpu-data # pkg install devcpu-data
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/boot/loader.conf${COLOR_NC} to update the CPU microcode automatically on on a FreeBSD system startup ...\n"
+		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Update ${COLOR_CYAN}/boot/loader.conf${COLOR_NC} to update the CPU microcode automatically on a FreeBSD system startup ...\n"
 		#loads and applies the update before the kernel begins booting
 		sysrc -f /boot/loader.conf cpu_microcode_load="YES"
 		sysrc -f /boot/loader.conf cpu_microcode_name="/boot/firmware/intel-ucode.bin"
@@ -1534,10 +1536,11 @@ fix_amd_ryzen_micro_stutter () {
 
 
 # ------------------ Delay in seconds before automatically booting ------------
-set_autoboot_delay () {
+set_autoboot_delay  () {
+
+	# Delay in seconds before automatically booting
 	printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Set FreeBSD ${COLOR_CYAN}boot delay${COLOR_NC} to 5 seconds\n"
-	sysrc -f /boot/loader.conf autoboot_delay="$AUTOBOOTDELAY" 		# Delay in seconds before autobooting
-	
+	sysrc -f /boot/loader.conf autoboot_delay="$AUTOBOOTDELAY"
 }
 
 
