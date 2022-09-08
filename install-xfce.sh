@@ -809,7 +809,7 @@ install_pkg () {
 
 	if [ "$INSTALL_PKG" -eq 1 ] ; then
 		printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Bootstrapping pkg\n\n"
-		env ASSUME_ALWAYS_YES=YES /usr/sbin/pkg
+		env ASSUME_ALWAYS_YES=YES /usr/sbin/pkg bootstrap
 		echo ""
 	else
 		printf "[ ${COLOR_YELLOW}INFO${COLOR_NC} ]  Skipping pkg bootstrap\n"
