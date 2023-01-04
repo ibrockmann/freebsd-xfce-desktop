@@ -1,10 +1,10 @@
 #!/bin/sh
 
 #============================================================================
-# Installation of a Xfce 4.16 Desktop Environment for FreeBSD 13.x
+# Installation of a Xfce 4.18 Desktop Environment for FreeBSD 13.x
 # by ibrockmann, Version: 2.0
 # 
-# Notes: Installation of an Xfce 4.16 Desktop Environment with Matcha and 
+# Notes: Installation of an Xfce 4.18 Desktop Environment with Matcha and 
 #  Arc GTK Themes on FreeBSD 13.x
 #
 # Display driver: Script supports current nvidia FreeBSD (X64) and VMware
@@ -1626,7 +1626,7 @@ update_rc_conf lightdm_enable
 install_packages xdg-user-dirs
 
 ## ------------------------------------ install xfce panel plugins -------------
-install_packages xfce4-whiskermenu-plugin thunar-archive-plugin xfce4-weather-plugin dsbmixer
+install_packages xfce4-whiskermenu-plugin thunar-archive-plugin xfce4-weather-plugin xfce4-pulseaudio-plugin xfce4-screenshooter-plugin
 
 ## ------------------------------------ install Matcha and Arc themes ---------
 printf "[ ${COLOR_GREEN}INFO${COLOR_NC} ]  Installing ${COLOR_CYAN}XFCE GTK themes: Matcha and Arc${COLOR_NC} ...\n"
