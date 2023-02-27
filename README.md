@@ -1,6 +1,6 @@
 # FreeBSD Dektop with Xfce
 
-This script installs a Xfce 4.16 desktop environment with Arc and Matcha Gtk themes on FreeBSD 13.x
+This script installs a Xfce 4.18 desktop environment with Arc and Matcha Gtk themes on FreeBSD 13.x
 
 Display drivers: Only the current nvidia FreeBSD (X64) and VMware display drivers are supported. When VMware is used, the screen size variable must be set to your needs.
 Default: 2560x1440
