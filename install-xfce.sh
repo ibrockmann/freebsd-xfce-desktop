@@ -51,8 +51,7 @@ INSTALL_CPU_MICROCODE_UPDATES=0	# Install Intel and AMD CPUs microcode updates a
 # environment variables
 
 # Github Repository
-#GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main
-GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/dialog
+GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main
 
 # Default items for diaog boxes
 BACKTITLE="Installation of a Xfce Desktop Environment for FreeBSD 13.x"
