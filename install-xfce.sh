@@ -1,11 +1,11 @@
 #!/bin/sh
 
 #============================================================================
-# Installation of a Xfce 4.18 Desktop Environment for FreeBSD 13.x
+# Installation of a Xfce 4.18 Desktop Environment for FreeBSD 14.x
 # by ibrockmann, Version: 2.0
 # 
 # Notes: Installation of an Xfce 4.18 Desktop Environment with Matcha and 
-#  Arc GTK Themes on FreeBSD 13.x
+#  Arc GTK Themes on FreeBSD 14.x
 #
 # Display driver: Script supports current nvidia FreeBSD (X64) and VMware
 #  display driver only
@@ -894,9 +894,9 @@ local FONTS
 #x11-fonts/firacode			# Monospaced font with programming ligatures derived from Fira
 #x11-hack/hack-font			# Monospaced font designed to be a workhorse typeface for code
 #x11-fonts/inconsolata-ttf		# Attractive font for programming
-#x11-fonts/sourcecodepro-ttf		# Set of fonts by Adobe designed for coders
+#x11-fonts/source-code-pro-ttf		# Set of fonts by Adobe designed for coders
 
-	FONTS="anonymous-pro bitstream-vera cantarell-fonts croscorefonts firacode hack-font inconsolata-ttf liberation-fonts-ttf noto-basic noto-emoji sourcecodepro-ttf urwfonts webfonts"
+	FONTS="anonymous-pro bitstream-vera cantarell-fonts croscorefonts firacode hack-font inconsolata-ttf liberation-fonts-ttf noto-basic noto-emoji source-code-pro-ttf urwfonts webfonts"
 
 	install_packages $FONTS
 }
