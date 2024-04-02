@@ -11,7 +11,7 @@ Applications: Audacious, Catfish,  Chromium, doas, Glances, GNOME Archive manage
 
 ## Getting Started
 
-It is recommended that you start with a clean installation of FreeBSD 13.1 64-bit. If a user account already exists it should belong to the operator and wheel group so that administrative tasks can be performed. In addition a user account can be created during the installation of the FreeBSD Desktop environment.
+It is recommended that you start with a clean installation of FreeBSD 14.04.04.04.0If a user account already exists it should belong to the operator and wheel group so that administrative tasks can be performed. In addition a user account can be created during the installation of the FreeBSD Desktop environment.
 
 ### Prerequisites
 
