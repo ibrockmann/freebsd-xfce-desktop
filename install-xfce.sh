@@ -335,12 +335,12 @@ checklist_applications () {
 		--title "Application selection"	\
 		--checklist "
 Please select the packages to be installed:" 20 70 15 \
-		"Audacious"	"An advanced audio player"			on  \
+		"Audacious"	"An advanced audio player"			off \
 		"Chromium" 	"Browser built by Google"                     	off \
 		"Firefox" 	"Mozilla's web browser"                     	on  \
 		"Gimp"     	"Free & open source image editor"           	off \
-		"LibreOffice" 	"Free Office Suite"                     	off \
-		"mpv"    	"Free media player for the command line" 	on  \
+		"LibreOffice" 	"Free Office Suite"                     	on  \
+		"mpv"    	"Free media player for the command line" 	off \
 		"KeePassXC"	"Cross-platform password manager"		on  \
 		"Ristretto"     "Image-viewer for the Xfce desktop environment" on  \
 		"Shotwell"    	"Personal photo manager" 			off \
@@ -366,14 +366,14 @@ checklist_utilities () {
 Please select the packages to be installed:" 20 70 15 \
 			"Catfish"	"GTK based search utility"					on  \
 			"doas" 		"Simple sudo alternative to run commands as another user" 	on  \
-			"py39-glances" 	"Glances is a cross-platform monitoring tool"           	off \
+			"py39-glances" 	"Glances is a cross-platform monitoring tool"           	on  \
 			"htop"     	"Better top - interactive process viewer"           		on  \
 			"File-roller"	"GNOME Archive manager + 7-Zip file archiver"			on  \
 			"Lynis"    	"Security auditing and hardening tool"			 	off \
 			"Neofetch"     	"Fast, highly customizable system info script"			on  \
-			"Octopkg"     	"Graphical front-end to the FreeBSD package manager" 		off \
+			"Octopkg"     	"Graphical front-end to the FreeBSD package manager" 		on  \
 			"rkhunter"    	"Rootkit detection tool" 					off \
-			"Sysinfo"   	"Utility used to gather system configuration information"  	off 3>&1 1>&2 2>&3`
+			"Sysinfo"   	"Utility used to gather system configuration information"  	on  3>&1 1>&2 2>&3`
 
 	returncode=$?
 	msg_button
@@ -1175,7 +1175,7 @@ set_lightdm_greeter () {
 	# Syntax: e.g. display-setup-script=xrandr --output default --primary --mode 2560x1440 --rate 60
 	case $VGA_CARD in
 		1) 	XRANDR="display-setup-script=xrandr --output default --mode $SCREEN_SIZE";;
-		2) 	XRANDR="xdisplay-setup-script=";;
+		2) 	XRANDR="#display-setup-script=";;
 		*) 	printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] Only NVIDEA graphics cards or installation on VMWare is supportet!\n"
 			exit 1;;
 	esac
@@ -1190,10 +1190,10 @@ set_lightdm_greeter () {
 		fi
 		
 		sed -i .bak -e "s/#greeter-setup-script=.*/greeter-setup-script=setxkbmap  -layout $KEYBOARD_LAYOUT/" \
-					-e "s/#display-setup-script=.*/$XRANDR/" $FILE
+					-e "s/#display-setup-script=.*/$XRANDR" $FILE
 		# overwrite if setting already exists
 		sed -i .bak -e "s/^greeter-setup-script=.*/greeter-setup-script=setxkbmap  -layout $KEYBOARD_LAYOUT/" \
-					-e "s/^display-setup-script=.*/$XRANDR/" $FILE
+					-e "s/^display-setup-script=.*/$XRANDR" $FILE
 		
 		sed -n "/^\[Seat/,/#exit-on-failure/p" $FILE               # Print [Seat:*] section
 	else
