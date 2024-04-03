@@ -1190,10 +1190,10 @@ set_lightdm_greeter () {
 		fi
 		
 		sed -i .bak -e "s/#greeter-setup-script=.*/greeter-setup-script=setxkbmap  -layout $KEYBOARD_LAYOUT/" \
-					-e "s/#display-setup-script=.*/$XRANDR" $FILE
+					-e "s/#display-setup-script=.*/$XRANDR/" $FILE
 		# overwrite if setting already exists
 		sed -i .bak -e "s/^greeter-setup-script=.*/greeter-setup-script=setxkbmap  -layout $KEYBOARD_LAYOUT/" \
-					-e "s/^display-setup-script=.*/$XRANDR" $FILE
+					-e "s/^display-setup-script=.*/$XRANDR/" $FILE
 		
 		sed -n "/^\[Seat/,/#exit-on-failure/p" $FILE               # Print [Seat:*] section
 	else
