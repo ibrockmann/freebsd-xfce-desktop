@@ -1,10 +1,10 @@
 #!/bin/sh
 
 #============================================================================
-# Installation of a Xfce 4.18 Desktop Environment for FreeBSD 14.x
+# Installation of a Xfce 4.20 Desktop Environment for FreeBSD 14.x
 # by ibrockmann, Version: 2.0
 # 
-# Notes: Installation of an Xfce 4.18 Desktop Environment with Matcha and 
+# Notes: Installation of an Xfce 4.20 Desktop Environment with Matcha and 
 #  Arc GTK Themes on FreeBSD 14.x
 #
 # Display driver: Script supports current nvidia FreeBSD (X64) and VMware
@@ -54,7 +54,7 @@ INSTALL_CPU_MICROCODE_UPDATES=0	# Install Intel and AMD CPUs microcode updates a
 GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main
 
 # Default items for diaog boxes
-BACKTITLE="Installation of a Xfce Desktop Environment for FreeBSD 13.x"
+BACKTITLE="Installation of a Xfce Desktop Environment for FreeBSD 14.x"
 
 LANGUAGE_NAME=''			# System localization in /etc/login.conf: language_name|Account Type Description
 CHARSET=''		 
@@ -366,7 +366,7 @@ checklist_utilities () {
 Please select the packages to be installed:" 20 70 15 \
 			"Catfish"	"GTK based search utility"					on  \
 			"doas" 		"Simple sudo alternative to run commands as another user" 	on  \
-			"py39-glances" 	"Glances is a cross-platform monitoring tool"           	on  \
+			"py-glances" 	"Glances is a cross-platform monitoring tool"           	on  \
 			"htop"     	"Better top - interactive process viewer"           		on  \
 			"File-roller"	"GNOME Archive manager + 7-Zip file archiver"			on  \
 			"Lynis"    	"Security auditing and hardening tool"			 	off \
