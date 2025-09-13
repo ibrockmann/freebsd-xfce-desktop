@@ -366,7 +366,7 @@ checklist_utilities () {
 Please select the packages to be installed:" 20 70 15 \
 			"Catfish"	"GTK based search utility"					on  \
 			"doas" 		"Simple sudo alternative to run commands as another user" 	on  \
-			"py-glances" 	"Glances is a cross-platform monitoring tool"           	on  \
+			"py311-glances" 	"Glances is a cross-platform monitoring tool"           	on  \
 			"htop"     	"Better top - interactive process viewer"           		on  \
 			"File-roller"	"GNOME Archive manager + 7-Zip file archiver"			on  \
 			"Lynis"    	"Security auditing and hardening tool"			 	off \
