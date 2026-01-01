@@ -195,7 +195,7 @@ esac
 # ------------------------------------ Welcome message ------------------------
 msgbox_welcome () {
 
-	$DIALOG --colors --backtitle "$BACKTITLE" \
+	$DIALOG --backtitle "$BACKTITLE" \
 			--title "Welcome to the Xfce Desktop installer for FreeBSD" \
 			--msgbox "\nThis script will install pkg, X11 and the Xfce Desktop \
 Environment with Matcha and Arc GTK Themes. Additionally you have the \
