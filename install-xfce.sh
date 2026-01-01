@@ -1,11 +1,11 @@
 #!/bin/sh
 
 #============================================================================
-# Installation of a Xfce 4.20 Desktop Environment for FreeBSD 15.x
+# Installation of a Xfce 4.20 Desktop Environment for FreeBSD 14.x
 # by ibrockmann, Version: 2.0
 # 
 # Notes: Installation of an Xfce 4.20 Desktop Environment with Matcha and 
-#  Arc GTK Themes on FreeBSD 15.x
+#  Arc GTK Themes on FreeBSD 14.x
 #
 # Display driver: Script supports current nvidia FreeBSD (X64) and VMware
 #  display driver only
@@ -54,7 +54,7 @@ INSTALL_CPU_MICROCODE_UPDATES=0	# Install Intel and AMD CPUs microcode updates a
 GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main
 
 # Default items for diaog boxes
-BACKTITLE="Installation of a Xfce Desktop Environment for FreeBSD 15.x"
+BACKTITLE="Installation of a Xfce Desktop Environment for FreeBSD 14.x"
 
 LANGUAGE_NAME=''			# System localization in /etc/login.conf: language_name|Account Type Description
 CHARSET=''		 
@@ -78,7 +78,7 @@ COLOR_CYAN='\033[0;36m'
 
 # --------------------- Define the dialog exit status codes -------------------
 
-: "${DIALOG=bsddialog}"
+: "${DIALOG=dialog}"
 
 : "${DIALOG_OK=0}"
 : "${DIALOG_CANCEL=1}"
@@ -195,7 +195,7 @@ esac
 # ------------------------------------ Welcome message ------------------------
 msgbox_welcome () {
 
-	$DIALOG --backtitle "$BACKTITLE" \
+	$DIALOG --clear --colors --backtitle "$BACKTITLE" \
 			--title "Welcome to the Xfce Desktop installer for FreeBSD" \
 			--msgbox "\nThis script will install pkg, X11 and the Xfce Desktop \
 Environment with Matcha and Arc GTK Themes. Additionally you have the \
@@ -225,7 +225,7 @@ menubox_language () {
 		awk -F ';' 'NR>3 {printf "%s %s %s %s\n", "\""$1"\"", "\""$2, "|("$3")" "\"", "\"""lang="$1"\""}' /tmp/LanguageCode_CountryCode > $tempfile
 		sort -k 2 $tempfile | uniq > $input # remove duplicates
 
-		$DIALOG --no-tags --item-help --backtitle "$BACKTITLE"\
+		$DIALOG --clear --no-tags --item-help --backtitle "$BACKTITLE"\
 		--column-separator "|" \
 		--default-item "$LOCALE" \
 		--title "Common Language and Country Codes" \
