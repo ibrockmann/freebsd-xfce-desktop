@@ -229,7 +229,7 @@ menubox_language () {
 		--column-separator "|" \
 		--default-item "$LOCALE" \
 		--title "Common Language and Country Codes" \
-		menu "
+		--menu "
 		Please select the language you want to use with Xfce:" 20 70 15 \
 		--file $input 2> $tempfile
 
