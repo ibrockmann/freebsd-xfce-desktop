@@ -54,7 +54,7 @@ INSTALL_CPU_MICROCODE_UPDATES=0	# Install Intel and AMD CPUs microcode updates a
 GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/bsddialog
 
 # Default items for diaog boxes
-BACKTITLE="Installation of a Xfce Desktop Environment for FreeBSD 14.x"
+BACKTITLE="Installation of a Xfce Desktop Environment for FreeBSD 15.x"
 
 LANGUAGE_NAME=''			# System localization in /etc/login.conf: language_name|Account Type Description
 CHARSET=''		 
@@ -84,9 +84,8 @@ COLOR_CYAN='\033[0;36m'
 : "${DIALOG_CANCEL=1}"
 : "${DIALOG_HELP=2}"
 : "${DIALOG_EXTRA=3}"
-: "${DIALOG_ITEM_HELP=4}"
-: "${DIALOG_TIMEOUT=5}"
-: "${DIALOG_ESC=255}"
+: "${DIALOG_TIMEOUT=4}"
+: "${DIALOG_ESC=5}"
 
 : "${SIG_NONE=0}"
 : "${SIG_HUP=1}"
@@ -153,8 +152,6 @@ msg_button () {
 		  echo "Help pressed.";;
 		$DIALOG_EXTRA)
 		  echo "Extra button pressed.";;
-		$DIALOG_ITEM_HELP)
-		  echo "Item-help button pressed.";;
 		$DIALOG_TIMEOUT)
 		  echo "Timeout expired.";;
 		$DIALOG_ERROR)
@@ -179,8 +176,6 @@ yesno () {
     		  echo "Help pressed.";;
   	  	$DIALOG_EXTRA)
     		  echo "Extra button pressed.";;
-  		$DIALOG_ITEM_HELP)
-    		  echo "Item-help button pressed.";;
   		$DIALOG_TIMEOUT)
     		  echo "Timeout expired.";;
   		$DIALOG_ERROR)
@@ -222,11 +217,20 @@ menubox_language () {
 	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode; then
 		
 		# NR>3: Skip first 3 lines from file
+		#awk -F ';' 'NR>3 {printf "%s %s %s %s\n", "\""$1"\"", "\""$2, "|("$3")" "\"", "\"""lang="$1"\""}' /tmp/LanguageCode_CountryCode > $tempfile
 		awk -F ';' 'NR>3 {printf "%s %s %s %s\n", "\""$1"\"", "\""$2, "|("$3")" "\"", "\"""lang="$1"\""}' /tmp/LanguageCode_CountryCode > $tempfile
+		
 		sort -k 2 $tempfile | uniq > $input # remove duplicates
+		
+		#$DIALOG --no-tags --item-help --backtitle "$BACKTITLE"\
+		#--default-item "$LOCALE" \
+		#--title "Common Language and Country Codes" \
+		#--menu "
+		#Please select the language you want to use with Xfce:" 20 70 15 \
+		#--file $input 2> $tempfile
 
-		$DIALOG --no-tags --item-help --backtitle "$BACKTITLE"\
-		--default-item "$LOCALE" \
+
+	    $DIALOG --backtitle "$BACKTITLE"\
 		--title "Common Language and Country Codes" \
 		--menu "
 		Please select the language you want to use with Xfce:" 20 70 15 \
