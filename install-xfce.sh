@@ -217,42 +217,50 @@ Default: 2560x1440" 18 70
 
 menubox_language () {
 
-	cd /tmp || exit 1
+    cd /tmp || exit 1
 
-	if ! fetch --no-verify-peer \
-		${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode
-	then
-		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] Unable to fetch language list\n"
-		exit 1
-	fi
+    # Fetch language file
+    if ! fetch --no-verify-peer "${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode"; then
+        printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] Unable to fetch language list\n"
+        exit 1
+    fi
 
-	menu_items=""
+    # Reset positional parameters
+    set --
 
-	# Build menu: NAME + DESCRIPTION only
-	while IFS=';' read -r code name country rest; do
-		[ -z "$code" ] && continue
-		menu_items="$menu_items
-$code \"$name ($country)\""
-	done < <(awk 'NR>3' LanguageCode_CountryCode)
+    # Build menu items: MENU_NAME + DESCRIPTION
+    awk -F';' 'NR>3 && $1 != "" { printf "%s\t%s (%s)\n", $1, $2, $3 }' LanguageCode_CountryCode |
+    while IFS="$(printf '\t')" read -r code desc; do
+        # Workaround: Wenn dieser Code der aktuell gewählte Locale ist, setzen wir ihn an den Anfang
+        if [ "$code" = "$LOCALE" ]; then
+            set -- "$code" "$desc" "$@"
+        else
+            set -- "$@" "$code" "$desc"
+        fi
+    done
 
-	LOCALE=$(
-		eval $DIALOG \
-			--clear-screen \
-			--backtitle \"$BACKTITLE\" \
-			--title \"Common Language and Country Codes\" \
-			--menu \"Please select the language you want to use with Xfce:\" \
-			20 70 15 \
-			$menu_items \
-			2>&1 >/dev/tty
-	)
+    # Show the menu
+    $DIALOG \
+        --clear-screen \
+        --backtitle "$BACKTITLE" \
+        --title "Common Language and Country Codes" \
+        --menu "Please select the language you want to use with Xfce:" \
+        20 70 15 \
+        "$@" \
+        2> "$tempfile"
 
-	returncode=$?
-	msg_button
+    returncode=$?
+    msg_button
 
-	[ $returncode -ne 0 ] && return 1
+    [ "$returncode" -ne 0 ] && return 1
 
-	LANGUAGE_NAME=$(awk -F ';' -v l="$LOCALE" '$1==l {print $2}' LanguageCode_CountryCode)
+    # Save the selection
+    LOCALE=$(cat "$tempfile")
+
+    # Get language name (German, English, ...)
+    LANGUAGE_NAME=$(awk -F ';' -v l="$LOCALE" '$1==l {print $2}' LanguageCode_CountryCode)
 }
+
 
 
 menubox_xkeyboard () {
