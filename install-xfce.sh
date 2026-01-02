@@ -233,7 +233,7 @@ menubox_language () {
 		--file $input 2> $tempfile
 
 		returncode=$?
-		msg_button 
+		msg_button
 		LOCALE=`cat $tempfile`
 		
 		# awk search needs regular expression, you can't put /var/. Instead, use tilde: awk -v var="$var" '$0 ~ var'
