@@ -249,7 +249,7 @@ menubox_language () {
 	fi
 }
 
-
+halt
 menubox_xkeyboard () {
 	
 	# ---------------------------------- local variables ----------------------
