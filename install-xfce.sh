@@ -1,11 +1,11 @@
 #!/bin/sh
 
 #============================================================================
-# Installation of a Xfce 4.20 Desktop Environment for FreeBSD 14.x
-# by ibrockmann, Version: 2.0
+# Installation of a Xfce 4.20 Desktop Environment for FreeBSD 15.x
+# by ibrockmann, Version: 2.1
 # 
 # Notes: Installation of an Xfce 4.20 Desktop Environment with Matcha and 
-#  Arc GTK Themes on FreeBSD 14.x
+#  Arc GTK Themes on FreeBSD 15.x
 #
 # Display driver: Script supports current nvidia FreeBSD (X64) and VMware
 #  display driver only
@@ -51,7 +51,7 @@ INSTALL_CPU_MICROCODE_UPDATES=0	# Install Intel and AMD CPUs microcode updates a
 # environment variables
 
 # Github Repository
-GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main
+GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/bsddialog
 
 # Default items for diaog boxes
 BACKTITLE="Installation of a Xfce Desktop Environment for FreeBSD 14.x"
@@ -78,7 +78,7 @@ COLOR_CYAN='\033[0;36m'
 
 # --------------------- Define the dialog exit status codes -------------------
 
-: "${DIALOG=dialog}"
+: "${DIALOG=bsddialog}"
 
 : "${DIALOG_OK=0}"
 : "${DIALOG_CANCEL=1}"
@@ -195,7 +195,7 @@ esac
 # ------------------------------------ Welcome message ------------------------
 msgbox_welcome () {
 
-	$DIALOG --clear --colors --backtitle "$BACKTITLE" \
+	$DIALOG --colors --backtitle "$BACKTITLE" \
 			--title "Welcome to the Xfce Desktop installer for FreeBSD" \
 			--msgbox "\nThis script will install pkg, X11 and the Xfce Desktop \
 Environment with Matcha and Arc GTK Themes. Additionally you have the \
