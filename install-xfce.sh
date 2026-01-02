@@ -249,7 +249,6 @@ menubox_language () {
 	fi
 }
 
-halt
 menubox_xkeyboard () {
 	
 	# ---------------------------------- local variables ----------------------
@@ -1567,6 +1566,7 @@ set +o errexit		# Disable errexit for dialog boxes
 # Welcome, select language, country code and keyboard for installation
 msgbox_welcome
 menubox_language
+sleep 10
 menubox_xkeyboard
 
 # ----------- Select applications & utilities for installation ----------------
