@@ -217,40 +217,41 @@ Default: 2560x1440" 18 70
 
 menubox_language () {
 
-	# ----- fetch a list of UTF-8 language- and country codes for FreeBSD -----
-	cd /tmp
-	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode; then
-		
-		# NR>3: Skip first 3 lines from file
-		awk -F ';' 'NR>3 {
-			printf "%s \"%s (%s)\" \"%s\"\n",
-				$1, $2, $3, "lang=" $1
-		}' /tmp/LanguageCode_CountryCode \
-		| sort -k 2 | uniq > "$input"
+	cd /tmp || exit 1
 
-		$DIALOG --clear \
-			--backtitle "$BACKTITLE" \
-			--title "Common Language and Country Codes" \
-			--item-bottom-desc \
-			--default-item "$LOCALE" \
-			--menu "
-Please select the language you want to use with Xfce:" \
-			20 70 15 \
-			--file "$input" 2> "$tempfile"
-
-		returncode=$?
-		msg_button 
-	    LOCALE=$(cat "$tempfile")
-
-		LANGUAGE_NAME=$(awk -v locale="$LOCALE" -F ';' \
-			'$1 ~ locale {print $2}' \
-			/tmp/LanguageCode_CountryCode)
-
-	else
-		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]   Unable to fetch the list of UTF-8 language- and country codes from github!\n"
-		printf "Installation aborted.\n"
+	if ! fetch --no-verify-peer \
+		${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode
+	then
+		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] Unable to fetch language list\n"
 		exit 1
 	fi
+
+	menu_items=""
+
+	# Build menu: NAME + DESCRIPTION only
+	while IFS=';' read -r code name country rest; do
+		[ -z "$code" ] && continue
+		menu_items="$menu_items
+$code \"$name ($country)\""
+	done < <(awk 'NR>3' LanguageCode_CountryCode)
+
+	LOCALE=$(
+		eval $DIALOG \
+			--clear-screen \
+			--backtitle \"$BACKTITLE\" \
+			--title \"Common Language and Country Codes\" \
+			--menu \"Please select the language you want to use with Xfce:\" \
+			20 70 15 \
+			$menu_items \
+			2>&1 >/dev/tty
+	)
+
+	returncode=$?
+	msg_button
+
+	[ $returncode -ne 0 ] && return 1
+
+	LANGUAGE_NAME=$(awk -F ';' -v l="$LOCALE" '$1==l {print $2}' LanguageCode_CountryCode)
 }
 
 
