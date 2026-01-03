@@ -232,6 +232,7 @@ menubox_language () {
 
 	    $DIALOG --backtitle "$BACKTITLE"\
 		--title "Common Language and Country Codes" \
+		----item-bottom-desc \
 		--menu "
 		Please select the language you want to use with Xfce:" 20 70 15 \
 		--file $input 2> $tempfile
