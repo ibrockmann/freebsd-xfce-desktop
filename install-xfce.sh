@@ -210,45 +210,94 @@ Default: 2560x1440" 18 70
 # ----------------------------------- user interaction -----------------------
 # ----------------------------------------------------------------------------
 
+#menubox_language () {
+#
+#	# ----- fetch a list of UTF-8 language- and country codes for FreeBSD -----
+#	cd /tmp
+#	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode; then
+#		
+#		# NR>3: Skip first 3 lines from file
+#		#awk -F ';' 'NR>3 {printf "%s %s %s %s\n", "\""$1"\"", "\""$2, "|("$3")" "\"", "\"""lang="$1"\""}' /tmp/LanguageCode_CountryCode > $tempfile
+#		awk -F ';' 'NR>3 {printf "%s %s %s %s\n", "\""$1"\"", "\""$2, "|("$3")" "\"", "\"""lang="$1"\""}' /tmp/LanguageCode_CountryCode > $tempfile
+#		
+#		sort -k 2 $tempfile | uniq > $input # remove duplicates
+#		
+#		#$DIALOG --no-tags --item-help --backtitle "$BACKTITLE"\
+#		#--default-item "$LOCALE" \
+#		#--title "Common Language and Country Codes" \
+#		#--menu "
+#		#Please select the language you want to use with Xfce:" 20 70 15 \
+#		#--file $input 2> $tempfile
+#
+#
+#	    $DIALOG --backtitle "$BACKTITLE"\
+#		--title "Common Language and Country Codes" \
+#		----item-bottom-desc \
+#		--menu "
+#		Please select the language you want to use with Xfce:" 20 70 15 \
+#		--file $input 2> $tempfile
+#
+#		returncode=$?
+#		msg_button
+#		LOCALE=`cat $tempfile`
+#		
+#		# awk search needs regular expression, you can't put /var/. Instead, use tilde: awk -v var="$var" '$0 ~ var'
+#		LANGUAGE_NAME=`awk -v locale="$LOCALE" -F ';' '$1~locale {print $2}' /tmp/LanguageCode_CountryCode`
+#	else
+#		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]   Unable to fetch the list of UTF-8 language- and country codes from github!\n"
+#		printf "Installation aborted.\n"
+#		exit 1
+#	fi
+#}
+
+
 menubox_language () {
 
-	# ----- fetch a list of UTF-8 language- and country codes for FreeBSD -----
-	cd /tmp
-	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode; then
-		
-		# NR>3: Skip first 3 lines from file
-		#awk -F ';' 'NR>3 {printf "%s %s %s %s\n", "\""$1"\"", "\""$2, "|("$3")" "\"", "\"""lang="$1"\""}' /tmp/LanguageCode_CountryCode > $tempfile
-		awk -F ';' 'NR>3 {printf "%s %s %s %s\n", "\""$1"\"", "\""$2, "|("$3")" "\"", "\"""lang="$1"\""}' /tmp/LanguageCode_CountryCode > $tempfile
-		
-		sort -k 2 $tempfile | uniq > $input # remove duplicates
-		
-		#$DIALOG --no-tags --item-help --backtitle "$BACKTITLE"\
-		#--default-item "$LOCALE" \
-		#--title "Common Language and Country Codes" \
-		#--menu "
-		#Please select the language you want to use with Xfce:" 20 70 15 \
-		#--file $input 2> $tempfile
+    cd /tmp || exit 1
 
+    # Fetch language file
+    if ! fetch --no-verify-peer "${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode"; then
+        printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] Unable to fetch language list\n"
+        exit 1
+    fi
 
-	    $DIALOG --backtitle "$BACKTITLE"\
-		--title "Common Language and Country Codes" \
-		----item-bottom-desc \
-		--menu "
-		Please select the language you want to use with Xfce:" 20 70 15 \
-		--file $input 2> $tempfile
+    # Reset positional parameters
+    set --
 
-		returncode=$?
-		msg_button
-		LOCALE=`cat $tempfile`
-		
-		# awk search needs regular expression, you can't put /var/. Instead, use tilde: awk -v var="$var" '$0 ~ var'
-		LANGUAGE_NAME=`awk -v locale="$LOCALE" -F ';' '$1~locale {print $2}' /tmp/LanguageCode_CountryCode`
-	else
-		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]   Unable to fetch the list of UTF-8 language- and country codes from github!\n"
-		printf "Installation aborted.\n"
-		exit 1
-	fi
+    # Build menu items: MENU_NAME + DESCRIPTION
+    awk -F';' 'NR>3 && $1 != "" { printf "%s\t%s (%s)\n", $1, $2, $3 }' LanguageCode_CountryCode |
+    while IFS="$(printf '\t')" read -r code desc; do
+        # Workaround: Wenn dieser Code der aktuell gewählte Locale ist, setzen wir ihn an den Anfang
+        if [ "$code" = "$LOCALE" ]; then
+            set -- "$code" "$desc" "$@"
+        else
+            set -- "$@" "$code" "$desc"
+        fi
+    done
+
+    # Show the menu
+    $DIALOG \
+        --clear-screen \
+        --backtitle "$BACKTITLE" \
+        --title "Common Language and Country Codes" \
+        --menu "Please select the language you want to use with Xfce:" \
+        20 70 15 \
+        "$@" \
+        2> "$tempfile"
+
+    returncode=$?
+    msg_button
+
+    [ "$returncode" -ne 0 ] && return 1
+
+    # Save the selection
+    LOCALE=$(cat "$tempfile")
+
+    # Get language name (German, English, ...)
+    LANGUAGE_NAME=$(awk -F ';' -v l="$LOCALE" '$1==l {print $2}' LanguageCode_CountryCode)
 }
+
+
 
 menubox_xkeyboard () {
 	
