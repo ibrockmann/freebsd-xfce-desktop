@@ -1549,6 +1549,7 @@ set +o errexit		# Disable errexit for dialog boxes
 # Welcome, select language, country code and keyboard for installation
 msgbox_welcome
 menubox_language
+printf $LOCALE
 sleep 10
 menubox_xkeyboard
 
