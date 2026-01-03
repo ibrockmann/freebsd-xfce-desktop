@@ -292,7 +292,8 @@ menubox_language () {
 	"sv_FI.UTF-8" "Swedish (Finland)" \
 	"sv_SE.UTF-8" "Swedish (Sweden)" \
 	"tr_TR.UTF-8" "Turkish (Turkey)" \
-	"uk_UA.UTF-8" "Ukrainian (Ukraine)" 
+	"uk_UA.UTF-8" "Ukrainian (Ukraine)" \
+	3>&1 1>&2 2>&3 3>&-)
 	
 	returncode=$?
 	LOCALE=$returncode
