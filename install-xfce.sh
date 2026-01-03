@@ -251,130 +251,55 @@ Default: 2560x1440" 18 70
 #}
 
 
+
 menubox_language () {
 
     cd /tmp || exit 1
 
-    # Fetch language file
     if ! fetch --no-verify-peer "${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode"; then
         printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] Unable to fetch language list\n"
         exit 1
     fi
 
-    # Reset positional parameters
-    set --
+    # Tempfile für bsddialog --menu
+    menufile=$(mktemp) || exit 1
 
-    # Build menu items: MENU_NAME + DESCRIPTION
-    awk -F';' 'NR>3 && $1 != "" { printf "%s\t%s (%s)\n", $1, $2, $3 }' LanguageCode_CountryCode |
+    # NR>3, Tab getrennt: Code + Description
+    awk -F';' 'NR>3 && $1 != "" { printf "%s\t%s (%s)\n", $1, $2, $3 }' LanguageCode_CountryCode > "$menufile"
+
+    # Workaround für "default item":
+    # Wir sortieren die Datei so, dass der aktuelle LOCALE ganz oben steht
+    if [ -n "$LOCALE" ]; then
+        grep -v "^$LOCALE" "$menufile" > "$menufile.tmp"
+        grep "^$LOCALE" "$menufile" >> "$menufile.tmp"
+        mv "$menufile.tmp" "$menufile"
+    fi
+
+    # Zeilen aus Datei in bsddialog einfügen
+    menuargs=""
     while IFS="$(printf '\t')" read -r code desc; do
-        # Workaround: Wenn dieser Code der aktuell gewählte Locale ist, setzen wir ihn an den Anfang
-        if [ "$code" = "$LOCALE" ]; then
-            set -- "$code" "$desc" "$@"
-        else
-            set -- "$@" "$code" "$desc"
-        fi
-    done
+        menuargs="$menuargs \"$code\" \"$desc\""
+    done < "$menufile"
 
-    # Show the menu
-    $DIALOG \
+    # Jetzt bsddialog aufrufen (eval nötig für die Quotes)
+    eval $DIALOG \
         --clear-screen \
         --backtitle "$BACKTITLE" \
         --title "Common Language and Country Codes" \
         --menu "Please select the language you want to use with Xfce:" \
-        20 70 15 \
-        "$@" \
-        2> "$tempfile"
+        20 70 15 $menuargs 2> "$tempfile"
 
     returncode=$?
     msg_button
-
     [ "$returncode" -ne 0 ] && return 1
 
-    # Save the selection
+    # Save selection
     LOCALE=$(cat "$tempfile")
-
-    # Get language name (German, English, ...)
     LANGUAGE_NAME=$(awk -F ';' -v l="$LOCALE" '$1==l {print $2}' LanguageCode_CountryCode)
+
+    rm -f "$menufile"
 }
 
-
-
-menubox_xkeyboard () {
-	
-	# ---------------------------------- local variables ----------------------
-	local country_code 
-	
-	# ----------------- fetch a list of  XKB data description files -----------
-
-	cd /tmp
-	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/xkeyboard_layout; then
-		
-		# ----------------------- Keyboard layout -----------------------------
-		# Select ! layout paragraph from xkeyboard_layout file
-		# RS=''(Input record separator) has a special meaning to awk,
-		# it splits records on blank lines; Used to print paragraph 
-		
-		awk -v RS='' '/! layout/ {print}'  /tmp/xkeyboard_layout > $tempfile
-		awk  'NR>1 {out=$2; for(i=3;i<=NF;i++){out=out" "$i}; print $1, "\""out"\""}' $tempfile \
-			| sort -d -k 2 > $input
-
-
-		# Set default-item, based on Country_Code
-		country_code=`echo $LOCALE | cut -d . -f1 | cut -d _ -f2`	# Country_Code
-		KEYBOARD_LAYOUT=`echo $country_code | tr "[:upper:]" "[:lower:]"`
-
-		$DIALOG --clear --backtitle "$BACKTITLE" \
-		--default-item "$KEYBOARD_LAYOUT" \
-		--title "Keyboard Setup" \
-		--menu "
-		Please select your keyboard layout:" 20 70 15 \
-		--file $input 2> $tempfile
-		
-		returncode=$?
-		msg_button 
-		
-		KEYBOARD_LAYOUT=`cat $tempfile`
-
-		# ----------------------- Keyboard variant ----------------------------
-
-		# Select keyboard variants from xkeyboard_layout file
-		awk -v RS='' '/! variant/ {print}'  /tmp/xkeyboard_layout > $tempfile
-		
-		# Display only variants that match to keyboard layout
-		grep "${KEYBOARD_LAYOUT}:" $tempfile > $input
-
-		# Are there any keyboard variants?
-		if [ -s $input ]; then
-			$DIALOG --clear --defaultno --backtitle "$BACKTITLE" \
-					--title "Keyboard Setup" \
-        			--yesno "Use a special variant for the keyboard layout?\n\
-(e.g. Dvorak, Macintosh, No dead keys, ...)" 7 50
-			
-			returncode=$?
-			yesno
-			if [ $returncode -eq $DIALOG_OK ]; then
-				awk  '{out=$2; for(i=3;i<=NF;i++){out=out" "$i}; print $1, "\""out"\""}' $input > $tempfile
-				
-				$DIALOG --clear --backtitle "$BACKTITLE" \
-					--title "Keyboard Setup" \
-					--menu "
-					Please select your keyboard variant:" 20 70 15 \
-					--file $tempfile 2> $input
-				
-				returncode=$?
-				if [ $returncode -eq $DIALOG_CANCEL ]; then
-					menubox_xkeyboard
-				fi
-				msg_button
-				
-				KEYBOARD_VARIANT=`cat $input`
-			fi
-		fi
-	else
-		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]   Unable to fetch the list of UTF-8 language- and country codes from github!\n"
-		exit 1
-	fi
-}
 
 
 # -----------------------------------------------------------------------------
