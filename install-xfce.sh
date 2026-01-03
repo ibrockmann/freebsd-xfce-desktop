@@ -59,12 +59,11 @@ BACKTITLE="Installation of a Xfce Desktop Environment for FreeBSD 15.x"
 LANGUAGE_NAME=''			# System localization in /etc/login.conf: language_name|Account Type Description
 CHARSET=''		 
 
-
 KEYBOARD_LAYOUT=''			# Initialize keyboard layout, is set in function menubox_xkeyboard  
-					# Keyboard layouts and other adjustable parameters are listed in man page xkeyboard-config(7).
-KEYBOARD_VARIANT='default'		# Initialize keyboard variant, e.g. Dvorak, Macintosh, No dead keys		
+							# Keyboard layouts and other adjustable parameters are listed in man page xkeyboard-config(7).
+KEYBOARD_VARIANT='default'	# Initialize keyboard variant, e.g. Dvorak, Macintosh, No dead keys		
 
-PAGER=cat				# used by freebsd-update, instead of PAGER=less
+PAGER=cat					# used by freebsd-update, instead of PAGER=less
 export PAGER
 
 # define colors
@@ -210,95 +209,104 @@ Default: 2560x1440" 18 70
 # ----------------------------------- user interaction -----------------------
 # ----------------------------------------------------------------------------
 
-#menubox_language () {
-#
-#	# ----- fetch a list of UTF-8 language- and country codes for FreeBSD -----
-#	cd /tmp
-#	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode; then
-#		
-#		# NR>3: Skip first 3 lines from file
-#		#awk -F ';' 'NR>3 {printf "%s %s %s %s\n", "\""$1"\"", "\""$2, "|("$3")" "\"", "\"""lang="$1"\""}' /tmp/LanguageCode_CountryCode > $tempfile
-#		awk -F ';' 'NR>3 {printf "%s %s %s %s\n", "\""$1"\"", "\""$2, "|("$3")" "\"", "\"""lang="$1"\""}' /tmp/LanguageCode_CountryCode > $tempfile
-#		
-#		sort -k 2 $tempfile | uniq > $input # remove duplicates
-#		
-#		#$DIALOG --no-tags --item-help --backtitle "$BACKTITLE"\
-#		#--default-item "$LOCALE" \
-#		#--title "Common Language and Country Codes" \
-#		#--menu "
-#		#Please select the language you want to use with Xfce:" 20 70 15 \
-#		#--file $input 2> $tempfile
-#
-#
-#	    $DIALOG --backtitle "$BACKTITLE"\
-#		--title "Common Language and Country Codes" \
-#		----item-bottom-desc \
-#		--menu "
-#		Please select the language you want to use with Xfce:" 20 70 15 \
-#		--file $input 2> $tempfile
-#
-#		returncode=$?
-#		msg_button
-#		LOCALE=`cat $tempfile`
-#		
-#		# awk search needs regular expression, you can't put /var/. Instead, use tilde: awk -v var="$var" '$0 ~ var'
-#		LANGUAGE_NAME=`awk -v locale="$LOCALE" -F ';' '$1~locale {print $2}' /tmp/LanguageCode_CountryCode`
-#	else
-#		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]   Unable to fetch the list of UTF-8 language- and country codes from github!\n"
-#		printf "Installation aborted.\n"
-#		exit 1
-#	fi
-#}
-
-
-
 menubox_language () {
-
-    cd /tmp || exit 1
-
-    if ! fetch --no-verify-peer "${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode"; then
-        printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] Unable to fetch language list\n"
-        exit 1
-    fi
-
-    # Tempfile für bsddialog --menu
-    menufile=$(mktemp) || exit 1
-
-    # NR>3, Tab getrennt: Code + Description
-    awk -F';' 'NR>3 && $1 != "" { printf "%s\t%s (%s)\n", $1, $2, $3 }' LanguageCode_CountryCode > "$menufile"
-
-    # Workaround für "default item":
-    # Wir sortieren die Datei so, dass der aktuelle LOCALE ganz oben steht
-    if [ -n "$LOCALE" ]; then
-        grep -v "^$LOCALE" "$menufile" > "$menufile.tmp"
-        grep "^$LOCALE" "$menufile" >> "$menufile.tmp"
-        mv "$menufile.tmp" "$menufile"
-    fi
-
-    # Zeilen aus Datei in bsddialog einfügen
-    menuargs=""
-    while IFS="$(printf '\t')" read -r code desc; do
-        menuargs="$menuargs \"$code\" \"$desc\""
-    done < "$menufile"
-
-    # Jetzt bsddialog aufrufen (eval nötig für die Quotes)
-    eval $DIALOG \
-        --clear-screen \
-        --backtitle "$BACKTITLE" \
-        --title "Common Language and Country Codes" \
-        --menu "Please select the language you want to use with Xfce:" \
-        20 70 15 $menuargs 2> "$tempfile"
-
-    returncode=$?
-    msg_button
-    [ "$returncode" -ne 0 ] && return 1
-
-    # Save selection
-    LOCALE=$(cat "$tempfile")
-    LANGUAGE_NAME=$(awk -F ';' -v l="$LOCALE" '$1==l {print $2}' LanguageCode_CountryCode)
-
-    rm -f "$menufile"
+	cd /tmp
+	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode; then
+		# bsddialog can not read menu item from a file (as far as I know)
+		$DIALOG --backtitle "$BACKTITLE" \
+	--title "Common Language and Country Codes" \
+	--menu "Please select the language you want to use with Xfce:" 25 80 20 \
+	"af_ZA.UTF-8" "Afrikaans (South Africa)" \
+	"am_ET.UTF-8" "Amharic (Ethiopia)" \
+	"ar_AE.UTF-8" "Arabic (United Arab Emirates)" \
+	"ar_EG.UTF-8" "Arabic (Egypt)" \
+	"ar_JO.UTF-8" "Arabic (Jordan)" \
+	"ar_MA.UTF-8" "Arabic (Morocco)" \
+	"ar_QA.UTF-8" "Arabic (Qatar)" \
+	"ar_SA.UTF-8" "Arabic (Saudi Arabia)" \
+	"hy_AM.UTF-8" "Armenian (Armenia)" \
+	"eu_ES.UTF-8" "Basque (Spain)" \
+	"be_BY.UTF-8" "Belarusian (Belarus)" \
+	"nb_NO.UTF-8" "Bokmal (Norway)" \
+	"bg_BG.UTF-8" "Bulgarian (Bulgaria)" \
+	"ca_AD.UTF-8" "Catalan (Andorra)" \
+	"ca_ES.UTF-8" "Catalan (Spain)" \
+	"ca_FR.UTF-8" "Catalan (France)" \
+	"ca_IT.UTF-8" "Catalan (Italy)" \
+	"zh_CN.UTF-8" "Chinese simplified (China)" \
+	"zh_HK.UTF-8" "Chinese traditional (Hong Kong SAR China)" \
+	"zh_TW.UTF-8" "Chinese traditional (Taiwan)" \
+	"hr_HR.UTF-8" "Croatian (Croatia)" \
+	"cs_CZ.UTF-8" "Czech (Czech Republic)" \
+	"da_DK.UTF-8" "Danish (Denmark)" \
+	"nl_BE.UTF-8" "Dutch (Belgium)" \
+	"nl_NL.UTF-8" "Dutch (Netherlands)" \
+	"en_AU.UTF-8" "English (Australia)" \
+	"en_CA.UTF-8" "English (Canada)" \
+	"en_GB.UTF-8" "English (United Kingdom)" \
+	"en_HK.UTF-8" "English (Hong Kong SAR China)" \
+	"en_IE.UTF-8" "English (Ireland)" \
+	"en_NZ.UTF-8" "English (New Zealand)" \
+	"en_PH.UTF-8" "English (Philippines)" \
+	"en_SG.UTF-8" "English (Singapore)" \
+	"en_US.UTF-8" "English (US)" \
+	"en_ZA.UTF-8" "English (South Africa)" \
+	"et_EE.UTF-8" "Estonian (Estonia)" \
+	"fi_FI.UTF-8" "Finnish (Finland)" \
+	"fr_BE.UTF-8" "French (Belgium)" \
+	"fr_CA.UTF-8" "French (Canada)" \
+	"fr_CH.UTF-8" "French (Switzerland)" \
+	"fr_FR.UTF-8" "French (France)" \
+	"de_AT.UTF-8" "German (Austria)" \
+	"de_CH.UTF-8" "German (Switzerland)" \
+	"de_DE.UTF-8" "German (Germany)" \
+	"el_GR.UTF-8" "Greek (Greece)" \
+	"he_IL.UTF-8" "Hebrew (Israel)" \
+	"hi_IN.UTF-8" "Hindi (India)" \
+	"hu_HU.UTF-8" "Hungarian (Hungary)" \
+	"is_IS.UTF-8" "Icelandic (Iceland)" \
+	"ga_IE.UTF-8" "Irish (Ireland)" \
+	"it_CH.UTF-8" "Italian (Switzerland)" \
+	"it_IT.UTF-8" "Italian (Italy)" \
+	"ja_JP.UTF-8" "Japanese (Japan)" \
+	"kk_KZ.UTF-8" "Kazakh (Kazakhstan)" \
+	"ko_KR.UTF-8" "Korean (Korea)" \
+	"lv_LV.UTF-8" "Latvian (Latvia)" \
+	"lt_LT.UTF-8" "Lithuanian (Lithuania)" \
+	"mn_MN.UTF-8" "Macedonian (Macedonia)" \
+	"nn_NO.UTF-8" "Nynorsk (Norway)" \
+	"pl_PL.UTF-8" "Polish (Poland)" \
+	"pt_BR.UTF-8" "Portuguese (Brazil)" \
+	"pt_PT.UTF-8" "Portuguese (Portugal)" \
+	"ro_RO.UTF-8" "Romanian (Romania)" \
+	"ru_RU.UTF-8" "Russian (Russia)" \
+	"se_FI.UTF-8" "Sami (Finland)" \
+	"se_NO.UTF-8" "Sami (Norway)" \
+	"sr_RS.UTF-8" "Serbian (Serbia)" \
+	"sk_SK.UTF-8" "Slovak (Slovakia)" \
+	"sl_SI.UTF-8" "Slovenian (Slovenia)" \
+	"es_AR.UTF-8" "Spanish (Argentina)" \
+	"es_CR.UTF-8" "Spanish (Costa Rica)" \
+	"es_ES.UTF-8" "Spanish (Spain)" \
+	"es_MX.UTF-8" "Spanish (Mexico)" \
+	"sv_FI.UTF-8" "Swedish (Finland)" \
+	"sv_SE.UTF-8" "Swedish (Sweden)" \
+	"tr_TR.UTF-8" "Turkish (Turkey)" \
+	"uk_UA.UTF-8" "Ukrainian (Ukraine)"
+	
+	returncode=$?
+	LOCALE=$returncode
+	msg_button
+			
+	#awk search needs regular expression, you can't put /var/. Instead, use tilde: awk -v var="$var" '$0 ~ var'
+		LANGUAGE_NAME=`awk -v locale="$LOCALE" -F ';' '$1~locale {print $2}' /tmp/LanguageCode_CountryCode`
+	else
+		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]   Unable to fetch the list of UTF-8 language- and country codes from github!\n"
+		printf "Installation aborted.\n"
+		exit 1
+	fi
 }
+
 
 
 
