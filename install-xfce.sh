@@ -33,16 +33,16 @@ LOGFILE=$(pwd)"/"$(basename $0 sh)"log"
 SCREEN_SIZE='2560x1440'	# Required for VMWare and used for the EFI console		
 
 # Delay in seconds before autobooting FreeBSD
-AUTOBOOTDELAY='5'	# Delay in seconds before FreeBSD will automatically boot
+AUTOBOOTDELAY='5'
 
 
 # Initialize values for language and country code, keyboard layout, Charset
 LOCALE='de_DE.UTF-8'	# LanguageCode_CountryCode.Encoding;set default to German, Germany, UTF-8
-			# A complete list can be found by typing: % locale -a  | more
-			# default-item in function menubox_language	
+						# A complete list can be found by typing: % locale -a  | more
+						# default-item in function menubox_language	
 
 INSTALL_CPU_MICROCODE_UPDATES=0	# Install Intel and AMD CPUs microcode updates and load updates automatically on a FreeBSD system startup
-				# 0 - do not install, 1 -  install Intel and AMD  CPUs microcode updates
+								# 0 - do not install, 1 -  install Intel and AMD  CPUs microcode updates
 
 # -----------------------------------------------------------------------------
 # --------------------- Do not change anything from here on -------------------
@@ -51,13 +51,14 @@ INSTALL_CPU_MICROCODE_UPDATES=0	# Install Intel and AMD CPUs microcode updates a
 # environment variables
 
 # Github Repository
-GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/bsddialog
+GITHUB_REPOSITORY=https://raw.githubusercontent.com/ibrockmann/freebsd-xfce-desktop/main
 
 # Default items for diaog boxes
 BACKTITLE="Installation of a Xfce Desktop Environment for FreeBSD 15.x"
 
 LANGUAGE_NAME=''			# System localization in /etc/login.conf: language_name|Account Type Description
 CHARSET=''		 
+
 
 KEYBOARD_LAYOUT=''			# Initialize keyboard layout, is set in function menubox_xkeyboard  
 							# Keyboard layouts and other adjustable parameters are listed in man page xkeyboard-config(7).
@@ -76,7 +77,6 @@ COLOR_CYAN='\033[0;36m'
 
 
 # --------------------- Define the dialog exit status codes -------------------
-
 : "${DIALOG=bsddialog}"
 
 : "${DIALOG_OK=0}"
@@ -189,7 +189,7 @@ esac
 # ------------------------------------ Welcome message ------------------------
 msgbox_welcome () {
 
-	$DIALOG --colors --backtitle "$BACKTITLE" \
+	$DIALOG --clear --colors --backtitle "$BACKTITLE" \
 			--title "Welcome to the Xfce Desktop installer for FreeBSD" \
 			--msgbox "\nThis script will install pkg, X11 and the Xfce Desktop \
 Environment with Matcha and Arc GTK Themes. Additionally you have the \
@@ -210,97 +210,44 @@ Default: 2560x1440" 18 70
 # ----------------------------------------------------------------------------
 
 menubox_language () {
-	cd /tmp
+
+	# ----- fetch a list of UTF-8 language- and country codes for FreeBSD -----
+	cd /tmp || exit 1
 	if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/LanguageCode_CountryCode; then
-		# bsddialog can not read menu item from a file (as far as I know)
-		$DIALOG --backtitle "$BACKTITLE" \
-	--title "Common Language and Country Codes" \
-	--menu "Please select the language you want to use with Xfce:" 25 80 20 \
-	"af_ZA.UTF-8" "Afrikaans (South Africa)" \
-	"am_ET.UTF-8" "Amharic (Ethiopia)" \
-	"ar_AE.UTF-8" "Arabic (United Arab Emirates)" \
-	"ar_EG.UTF-8" "Arabic (Egypt)" \
-	"ar_JO.UTF-8" "Arabic (Jordan)" \
-	"ar_MA.UTF-8" "Arabic (Morocco)" \
-	"ar_QA.UTF-8" "Arabic (Qatar)" \
-	"ar_SA.UTF-8" "Arabic (Saudi Arabia)" \
-	"hy_AM.UTF-8" "Armenian (Armenia)" \
-	"eu_ES.UTF-8" "Basque (Spain)" \
-	"be_BY.UTF-8" "Belarusian (Belarus)" \
-	"nb_NO.UTF-8" "Bokmal (Norway)" \
-	"bg_BG.UTF-8" "Bulgarian (Bulgaria)" \
-	"ca_AD.UTF-8" "Catalan (Andorra)" \
-	"ca_ES.UTF-8" "Catalan (Spain)" \
-	"ca_FR.UTF-8" "Catalan (France)" \
-	"ca_IT.UTF-8" "Catalan (Italy)" \
-	"zh_CN.UTF-8" "Chinese simplified (China)" \
-	"zh_HK.UTF-8" "Chinese traditional (Hong Kong SAR China)" \
-	"zh_TW.UTF-8" "Chinese traditional (Taiwan)" \
-	"hr_HR.UTF-8" "Croatian (Croatia)" \
-	"cs_CZ.UTF-8" "Czech (Czech Republic)" \
-	"da_DK.UTF-8" "Danish (Denmark)" \
-	"nl_BE.UTF-8" "Dutch (Belgium)" \
-	"nl_NL.UTF-8" "Dutch (Netherlands)" \
-	"en_AU.UTF-8" "English (Australia)" \
-	"en_CA.UTF-8" "English (Canada)" \
-	"en_GB.UTF-8" "English (United Kingdom)" \
-	"en_HK.UTF-8" "English (Hong Kong SAR China)" \
-	"en_IE.UTF-8" "English (Ireland)" \
-	"en_NZ.UTF-8" "English (New Zealand)" \
-	"en_PH.UTF-8" "English (Philippines)" \
-	"en_SG.UTF-8" "English (Singapore)" \
-	"en_US.UTF-8" "English (US)" \
-	"en_ZA.UTF-8" "English (South Africa)" \
-	"et_EE.UTF-8" "Estonian (Estonia)" \
-	"fi_FI.UTF-8" "Finnish (Finland)" \
-	"fr_BE.UTF-8" "French (Belgium)" \
-	"fr_CA.UTF-8" "French (Canada)" \
-	"fr_CH.UTF-8" "French (Switzerland)" \
-	"fr_FR.UTF-8" "French (France)" \
-	"de_AT.UTF-8" "German (Austria)" \
-	"de_CH.UTF-8" "German (Switzerland)" \
-	"de_DE.UTF-8" "German (Germany)" \
-	"el_GR.UTF-8" "Greek (Greece)" \
-	"he_IL.UTF-8" "Hebrew (Israel)" \
-	"hi_IN.UTF-8" "Hindi (India)" \
-	"hu_HU.UTF-8" "Hungarian (Hungary)" \
-	"is_IS.UTF-8" "Icelandic (Iceland)" \
-	"ga_IE.UTF-8" "Irish (Ireland)" \
-	"it_CH.UTF-8" "Italian (Switzerland)" \
-	"it_IT.UTF-8" "Italian (Italy)" \
-	"ja_JP.UTF-8" "Japanese (Japan)" \
-	"kk_KZ.UTF-8" "Kazakh (Kazakhstan)" \
-	"ko_KR.UTF-8" "Korean (Korea)" \
-	"lv_LV.UTF-8" "Latvian (Latvia)" \
-	"lt_LT.UTF-8" "Lithuanian (Lithuania)" \
-	"mn_MN.UTF-8" "Macedonian (Macedonia)" \
-	"nn_NO.UTF-8" "Nynorsk (Norway)" \
-	"pl_PL.UTF-8" "Polish (Poland)" \
-	"pt_BR.UTF-8" "Portuguese (Brazil)" \
-	"pt_PT.UTF-8" "Portuguese (Portugal)" \
-	"ro_RO.UTF-8" "Romanian (Romania)" \
-	"ru_RU.UTF-8" "Russian (Russia)" \
-	"se_FI.UTF-8" "Sami (Finland)" \
-	"se_NO.UTF-8" "Sami (Norway)" \
-	"sr_RS.UTF-8" "Serbian (Serbia)" \
-	"sk_SK.UTF-8" "Slovak (Slovakia)" \
-	"sl_SI.UTF-8" "Slovenian (Slovenia)" \
-	"es_AR.UTF-8" "Spanish (Argentina)" \
-	"es_CR.UTF-8" "Spanish (Costa Rica)" \
-	"es_ES.UTF-8" "Spanish (Spain)" \
-	"es_MX.UTF-8" "Spanish (Mexico)" \
-	"sv_FI.UTF-8" "Swedish (Finland)" \
-	"sv_SE.UTF-8" "Swedish (Sweden)" \
-	"tr_TR.UTF-8" "Turkish (Turkey)" \
-	"uk_UA.UTF-8" "Ukrainian (Ukraine)" \
-	3>&1 1>&2 2>&3 3>&-)
-	
-	returncode=$?
-	LOCALE=$returncode
-	msg_button
-			
-	#awk search needs regular expression, you can't put /var/. Instead, use tilde: awk -v var="$var" '$0 ~ var'
-		LANGUAGE_NAME=`awk -v locale="$LOCALE" -F ';' '$1~locale {print $2}' /tmp/LanguageCode_CountryCode`
+		
+		# NR>3: Skip first 3 lines from file
+		# awk -F ';' 'NR>3 {printf "%s %s %s %s\n", "\""$1"\"", "\""$2, "|("$3")" "\"", "\"""lang="$1"\""}' /tmp/LanguageCode_CountryCode > $tempfile
+		# sort -k 2 $tempfile | uniq > $input # remove duplicates
+		
+		MENU_ITEMS=$(awk -F ';' '$1 !~ /^#/ && NF>=3 {printf "%s \"%s (%s)\" ", $1, $2, $3}' /tmp/LanguageCode_CountryCode)
+        exec 3>&1
+		LOCALE=$(eval "$DIALOG --clear \
+        --backtitle \"$BACKTITLE\" \
+        --default-item \"$LOCALE\" \
+        --title \"Common Language and Country Codes\" \
+        --menu \"Please select the language you want to use with Xfce:\" 20 70 15 \
+        $MENU_ITEMS \
+        2>&1 1>&3")
+       
+	   returncode=$?
+       exec 3>&-
+	   
+
+		#$DIALOG --clear --no-tags --item-help --backtitle "$BACKTITLE"\
+		#--column-separator "|" \
+		#--default-item "$LOCALE" \
+		#--title "Common Language and Country Codes" \
+		#--menu "
+		#Please select the language you want to use with Xfce:" 20 70 15 \
+		#--file $input 2> $tempfile
+
+		#returncode=$?
+		msg_button 
+		#LOCALE=`cat $tempfile`
+		
+		# awk search needs regular expression, you can't put /var/. Instead, use tilde: awk -v var="$var" '$0 ~ var'
+		# LANGUAGE_NAME=`awk -v locale="$LOCALE" -F ';' '$1~locale {print $2}' /tmp/LanguageCode_CountryCode`
+		LANGUAGE_NAME=$(awk -F ';' -v locale="$LOCALE" ' $1 == locale { print $2 } ' /tmp/LanguageCode_CountryCode)
 	else
 		printf "[ ${COLOR_RED}ERROR${COLOR_NC} ]   Unable to fetch the list of UTF-8 language- and country codes from github!\n"
 		printf "Installation aborted.\n"
@@ -309,6 +256,87 @@ menubox_language () {
 }
 
 
+menubox_xkeyboard () {
+
+    local country_code
+
+    cd /tmp || exit 1
+
+    if fetch --no-verify-peer ${GITHUB_REPOSITORY}/config/xkeyboard_layout; then
+
+        # -------- Layout extrahieren --------
+        awk -v RS='' '/! layout/ {print}' /tmp/xkeyboard_layout > $tempfile
+
+        MENU_ITEMS=$(awk 'NR>1 {
+            out=$2
+            for(i=3;i<=NF;i++){out=out" "$i}
+            printf "%s \"%s\" ", $1, out
+        }' $tempfile)
+
+        # -------- Default aus Locale --------
+        country_code=$(echo "$LOCALE" | cut -d . -f1 | cut -d _ -f2)
+        KEYBOARD_LAYOUT=$(echo "$country_code" | tr "[:upper:]" "[:lower:]")
+
+        # -------- Menü anzeigen --------
+        exec 3>&1
+        KEYBOARD_LAYOUT=$(eval "$DIALOG --clear \
+            --backtitle \"$BACKTITLE\" \
+            --default-item \"$KEYBOARD_LAYOUT\" \
+            --title \"Keyboard Setup\" \
+            --menu \"Please select your keyboard layout:\" 20 70 15 \
+            $MENU_ITEMS \
+            2>&1 1>&3")
+        returncode=$?
+        exec 3>&-
+
+        msg_button
+
+        # -------- Varianten extrahieren --------
+        awk -v RS='' '/! variant/ {print}' /tmp/xkeyboard_layout > $tempfile
+        grep "${KEYBOARD_LAYOUT}:" $tempfile > $input
+
+        # -------- Varianten vorhanden? --------
+        if [ -s "$input" ]; then
+
+            $DIALOG --clear --defaultno --backtitle "$BACKTITLE" \
+                --title "Keyboard Setup" \
+                --yesno "Use a special variant for the keyboard layout?\n\
+(e.g. Dvorak, Macintosh, No dead keys, ...)" 7 50
+
+            returncode=$?
+            yesno
+
+            if [ "$returncode" -eq "$DIALOG_OK" ]; then
+
+                MENU_ITEMS=$(awk '{
+                    out=$2
+                    for(i=3;i<=NF;i++){out=out" "$i}
+                    printf "%s \"%s\" ", $1, out
+                }' $input)
+
+                exec 3>&1
+                KEYBOARD_VARIANT=$(eval "$DIALOG --clear \
+                    --backtitle \"$BACKTITLE\" \
+                    --title \"Keyboard Setup\" \
+                    --menu \"Please select your keyboard variant:\" 20 70 15 \
+                    $MENU_ITEMS \
+                    2>&1 1>&3")
+                returncode=$?
+                exec 3>&-
+
+                if [ "$returncode" -eq "$DIALOG_CANCEL" ]; then
+                    menubox_xkeyboard
+                fi
+
+                msg_button
+            fi
+        fi
+
+    else
+        printf "[ ${COLOR_RED}ERROR${COLOR_NC} ] Unable to fetch keyboard layout list!\n"
+        exit 1
+    fi
+}
 
 
 # -----------------------------------------------------------------------------
@@ -321,18 +349,18 @@ checklist_applications () {
 		--title "Application selection"	\
 		--checklist "
 Please select the packages to be installed:" 20 70 15 \
-		"Audacious"	"An advanced audio player"			off \
-		"Chromium" 	"Browser built by Google"                     	off \
-		"Firefox" 	"Mozilla's web browser"                     	on  \
-		"Gimp"     	"Free & open source image editor"           	off \
-		"LibreOffice" 	"Free Office Suite"                     	on  \
-		"mpv"    	"Free media player for the command line" 	off \
-		"KeePassXC"	"Cross-platform password manager"		on  \
+		"Audacious"	"An advanced audio player"							off \
+		"Chromium" 	"Browser built by Google"                     		off \
+		"Firefox" 	"Mozilla's web browser"                     		on  \
+		"Gimp"     	"Free & open source image editor"           		off \
+		"LibreOffice" 	"Free Office Suite"                     		on  \
+		"mpv"    	"Free media player for the command line" 			off \
+		"KeePassXC"	"Cross-platform password manager"					on  \
 		"Ristretto"     "Image-viewer for the Xfce desktop environment" on  \
-		"Shotwell"    	"Personal photo manager" 			off \
-		"Syncthing"	"continuous file synchronization program"	on  \
-		"Thunderbird"	"Mozilla's free email client"  	         	on  \
-		"Vim"		"Improved version of the vi editor"		on  \
+		"Shotwell"    	"Personal photo manager" 						off \
+		"Syncthing"	"continuous file synchronization program"			on  \
+		"Thunderbird"	"Mozilla's free email client"  	         		on  \
+		"Vim"		"Improved version of the vi editor"					on  \
 		"VLC"    	"Free & open source multimedia player" 		off 3>&1 1>&2 2>&3`
 
 	returncode=$?
@@ -350,15 +378,15 @@ checklist_utilities () {
 			--title "Utility selection"	\
 			--checklist "
 Please select the packages to be installed:" 20 70 15 \
-			"Catfish"	"GTK based search utility"					on  \
+			"Catfish"	"GTK based search utility"									on  \
 			"doas" 		"Simple sudo alternative to run commands as another user" 	on  \
-			"py311-glances" 	"Glances is a cross-platform monitoring tool"           	on  \
+			"py311-glances" 	"Glances is a cross-platform monitoring tool"       on  \
 			"htop"     	"Better top - interactive process viewer"           		on  \
 			"File-roller"	"GNOME Archive manager + 7-Zip file archiver"			on  \
-			"Lynis"    	"Security auditing and hardening tool"			 	off \
+			"Lynis"    	"Security auditing and hardening tool"			 			off \
 			"Neofetch"     	"Fast, highly customizable system info script"			on  \
-			"Octopkg"     	"Graphical front-end to the FreeBSD package manager" 		on  \
-			"rkhunter"    	"Rootkit detection tool" 					off \
+			"Octopkg"     	"Graphical front-end to the FreeBSD package manager" 	on  \
+			"rkhunter"    	"Rootkit detection tool" 								off \
 			"Sysinfo"   	"Utility used to gather system configuration information"  	on  3>&1 1>&2 2>&3`
 
 	returncode=$?
@@ -488,16 +516,16 @@ checklist_system_hardening () {
     	--title "System Hardening - Network security" --nocancel --separate-output \
     	--checklist "\nPlease choose system security hardening options:" \
    		0 0 0 \
-		"0 icmp_redirects" 	"Ignore ICMP redirects" ${icmp_redirects:-off} \
-		"1 icmp6_redimsg" 	"Ignore incoming ICMPv6 redirect messages" ${icmp6_redimsg:-off} \
+		"0 icmp_redirects" 		"Ignore ICMP redirects" ${icmp_redirects:-off} \
+		"1 icmp6_redimsg" 		"Ignore incoming ICMPv6 redirect messages" ${icmp6_redimsg:-off} \
 		"2 right_interface" 	"Verify packet arrives on correct interface" ${right_interface:-off} \
-		"3 random_id" 		"Assign a random IP id to each packet leaving the system" ${random_id:-off} \
-		"4 ip_redirect" 	"Do not send IP redirects" ${ip_redirect:-off} \
-		"5 ipv6_redirect" 	"Do not send IPv6 redirects" ${ip_redirect:-off} \
+		"3 random_id" 			"Assign a random IP id to each packet leaving the system" ${random_id:-off} \
+		"4 ip_redirect" 		"Do not send IP redirects" ${ip_redirect:-off} \
+		"5 ipv6_redirect" 		"Do not send IPv6 redirects" ${ip_redirect:-off} \
 		"6 tcp_with_synfin" 	"Drop TCP packets with SYN+FIN set" ${tcp_with_synfin:-off} \
-		"7 tcp_blackhole"	"Drop tcp packets destined for closed ports" ${tcp_blackhole:-off} \
-		"8 udp_blackhole"	"Drop udp packets destined for closed sockets" ${udp_blackhole:-off} \
-		"9 use_tempaddr"	"Enable IPv6 privacy extensions" ${use_tempaddr:-off} \
+		"7 tcp_blackhole"		"Drop tcp packets destined for closed ports" ${tcp_blackhole:-off} \
+		"8 udp_blackhole"		"Drop udp packets destined for closed sockets" ${udp_blackhole:-off} \
+		"9 use_tempaddr"		"Enable IPv6 privacy extensions" ${use_tempaddr:-off} \
 		"10 prefer_privaddr"	"Prefer IPv6 privacy addresses and use them over the normal addresses" ${prefer_privaddr:-off} \
 		3>&1 1>&2 2>&3`
 	returncode=$?
@@ -536,25 +564,23 @@ FIREWALL_MYSERVICES='22/tcp'
 FIREWALL_ALLOWSERVICE=`netstat -r -4  | awk '/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/ {print $1}'` # IP range IPv4
 
 returncode=0
-while [ $returncode != 1 ] && [ $returncode != 255 ]
+while [ $returncode != 1 ] && [ $returncode != 5 ]
 do
 	exec 3>&1
 
-	returntext=`$DIALOG --backtitle "$BACKTITLE" \
-	  --help-status \
-	  --help-button \
-	  --item-help \
-	  --title "IPFW firewall" \
-	  --form "Configuring a simple IPFW firewall:" \
-		15 50 0 \
-		"Firewall type: "		1 1 "workstation"			1 22 11 0 "Configuring a firewall using stateful rules." \
-		"Firewall quiete: " 		2 1 "YES"				2 22  3 0 "Don't log to standard output" \
-		"My services: "			3 1 "$FIREWALL_MYSERVICES"		3 22 50 0 "List of services, separated by spaces, that should be accessible on your computer" \
-		"Allow services: " 		4 1 "$FIREWALL_ALLOWSERVICE"		4 22 50 0 "List of IPs that should be allowed to access the provided services" \
-		"Firewall log deny: "	 	5 1 "YES"				5 22  3 0 "Logs all connection attempts that are denied to /var/log/security" \
-	2>&1 1>&3`
-	returncode=$?
-	exec 3>&-
+returntext=$(eval "$DIALOG --backtitle \"$BACKTITLE\" \
+  --title \"IPFW firewall\" \
+  --form \"Configuring a simple IPFW firewall:\" \
+    15 80 0 \
+    \"Firewall type:\"        1 1 \"workstation\"        1 22 11 0 \
+    \"Firewall quiet:\"       2 1 \"YES\"                2 22 3 0 \
+    \"My services:\"          3 1 \"$FIREWALL_MYSERVICES\" 3 22 50 0 \
+    \"Allow services:\"       4 1 \"$FIREWALL_ALLOWSERVICE\" 4 22 50 0 \
+    \"Firewall log deny:\"    5 1 \"YES\"                5 22 3 0 \
+  2>&1 1>&3")
+returncode=$?
+exec 3>&-
+
 
 	case $returncode in
 		$DIALOG_OK)
@@ -1293,27 +1319,27 @@ system_hardening () {
         
 		# delete existing hardening values
 		# /etc/sysctl.conf
-        sed -i .bak -e "/^security.bsd.see_other_gids=.*/d" 			\
-			-e "/^security.bsd.see_other_uids=.*/d" 		\
-			-e "/^security.bsd.see_jail_proc=.*/d"			\
+        sed -i .bak -e "/^security.bsd.see_other_gids=.*/d" 	\
+			-e "/^security.bsd.see_other_uids=.*/d" 			\
+			-e "/^security.bsd.see_jail_proc=.*/d"				\
 			-e "/^security.bsd.unprivileged_read_msgbuf=.*/d"	\
 			-e "/^security.bsd.unprivileged_proc_debug=.*/d"	\
-			-e "/^security.bsd.hardlink_check_uid=.*/d"		\
-			-e "/^security.bsd.hardlink_check_gid=.*/d"		\
-			-e "/^kern.randompid=.*/d"				\
-			-e "/^kern.ipc.shm_use_phys=.*/d"			\
-			-e "/^kern.msgbuf_show_timestamp=.*/d"			\
-			-e "/^hw.kbd.keymap_restrict_change=.*/d"		\
-			-e "/^net.inet.icmp.drop_redirect=.*/d"			\
-			-e "/^net.inet6.icmp6.rediraccept=.*/d"			\
-			-e "/^net.inet.ip.check_interface=.*/d"			\
-			-e "/^net.inet.ip.random_id=.*/d"			\
-			-e "/^net.inet.ip.redirect=.*/d"			\
-			-e "/^net.inet6.ip6.redirect=.*/d"			\
-			-e "/^net.inet.tcp.drop_synfin=.*/d"			\
-			-e "/^net.inet.tcp.blackhole=.*/d"			\
-			-e "/^net.inet.udp.blackhole=.*/d"			\
-			-e "/^net.inet6.ip6.use_tempaddr=.*/d"			\
+			-e "/^security.bsd.hardlink_check_uid=.*/d"			\
+			-e "/^security.bsd.hardlink_check_gid=.*/d"			\
+			-e "/^kern.randompid=.*/d"							\
+			-e "/^kern.ipc.shm_use_phys=.*/d"					\
+			-e "/^kern.msgbuf_show_timestamp=.*/d"				\
+			-e "/^hw.kbd.keymap_restrict_change=.*/d"			\
+			-e "/^net.inet.icmp.drop_redirect=.*/d"				\
+			-e "/^net.inet6.icmp6.rediraccept=.*/d"				\
+			-e "/^net.inet.ip.check_interface=.*/d"				\
+			-e "/^net.inet.ip.random_id=.*/d"					\
+			-e "/^net.inet.ip.redirect=.*/d"					\
+			-e "/^net.inet6.ip6.redirect=.*/d"					\
+			-e "/^net.inet.tcp.drop_synfin=.*/d"				\
+			-e "/^net.inet.tcp.blackhole=.*/d"					\
+			-e "/^net.inet.udp.blackhole=.*/d"					\
+			-e "/^net.inet6.ip6.use_tempaddr=.*/d"				\
 			-e "/^net.inet6.ip6.prefer_tempaddr=.*/d" $FILE
 		
 		# /etc/rc.conf
@@ -1550,8 +1576,6 @@ set +o errexit		# Disable errexit for dialog boxes
 # Welcome, select language, country code and keyboard for installation
 msgbox_welcome
 menubox_language
-printf $LOCALE
-sleep 10
 menubox_xkeyboard
 
 # ----------- Select applications & utilities for installation ----------------
