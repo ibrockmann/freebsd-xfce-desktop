@@ -14,7 +14,7 @@
 #
 # Applications: Audacious, Catfish, Chromium, doas, Firefox, Gimp, Glances,
 # GNOME Archive manager with 7-Zip, htop, KeePassXC, LibreOffice, lynis, 
-# mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, Syncthing, sysinfo,
+# mpv, neofetch, OctoPkg, Ristretto, Shotweel, Syncthing, sysinfo,
 # Thunderbird, VIM, VLC. 
 #
 # Script should be run on a fresh installed FreeBSD system.
@@ -196,7 +196,7 @@ Environment with Matcha and Arc GTK Themes. Additionally you have the \
 choise to install some basic applications:\n  \Z4Audacious, Catfish, \
 Chromium, doas, Firefox, Glances, GNOME Archive manager with 7-Zip, Gimp, \
 htop, KeePassXC, LibreOffice, lynis, mpv, neofetch, OctoPkg, Ristretto, \
-rkhunter, Shotweel, Syncthing, Sysinfo, Thunderbird, Vim, VLC.\Z0\n\n\
+Shotweel, Syncthing, Sysinfo, Thunderbird, Vim, VLC.\Z0\n\n\
 This script supports the current nvidia FreeBSD (X64) and VMware display drivers. \
 When using VMware, Screen size variable muste be set to your needs.\n
 Default: 2560x1440" 18 70
@@ -386,7 +386,6 @@ Please select the packages to be installed:" 20 70 15 \
 			"Lynis"    	"Security auditing and hardening tool"			 			off \
 			"Neofetch"     	"Fast, highly customizable system info script"			on  \
 			"Octopkg"     	"Graphical front-end to the FreeBSD package manager" 	on  \
-			"rkhunter"    	"Rootkit detection tool" 								off \
 			"Sysinfo"   	"Utility used to gather system configuration information"  	on  3>&1 1>&2 2>&3`
 
 	returncode=$?
@@ -1482,35 +1481,6 @@ enable_ipfw_firewall () {
 }
 
 
-enable_rkhunter () {
-	
-	if pkg info | grep -q rkhunter; then 			# Check if FreeBSD package rkhunter is installed
-		FILE="/etc/periodic.conf"			# this file contains local overrides for the default periodic configuration
-
-		if [ ! -f $FILE ]; then   			# /etc/periodic.conf exists?
-			touch $FILE
-		else
-			# delete existing parameters for rkhunter in /etc/periodic.conf
-			sed -i .bak '/# Keep your rkhunter database up-to-date/,/daily_rkhunter_check_flags="--checkall --nocolors --skip-keypress"/d' $FILE
-		
-		rm ${FILE}.bak
-		fi
-		
-		cat <<- EOF >> $FILE
-			# Keep your rkhunter database up-to-date
-			daily_rkhunter_update_enable="YES"
-			daily_rkhunter_update_flags="--update --nocolors"
-
-			# Daily security check
-			daily_rkhunter_check_enable="YES"
-			daily_rkhunter_check_flags="--checkall --nocolors --skip-keypress"
-		EOF
-		printf "\n[ ${COLOR_GREEN}INFO${COLOR_NC} ] ${COLOR_CYAN}$FILE:${COLOR_NC}\n"
-		cat $FILE
-	fi
-}
-
-
 # ------------------------ Intel and AMD CPUs microcode updates ---------------
 install_cpu_microcode_updates () {
 	if [ "$INSTALL_CPU_MICROCODE_UPDATES" -eq 1 ]; then
@@ -1656,7 +1626,6 @@ set_lightdm_greeter
 ## -------------------------- install applications & utilities -----------------
 install_packages $APP_LIST 
 install_packages $UTILITY_LIST
-enable_rkhunter	# Keep your rkhunter database up-to-date ans schedule daily security check
 } 2>&1 | tee -a $LOGFILE
 
 
