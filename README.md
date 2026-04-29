@@ -1,11 +1,11 @@
 # FreeBSD Dektop with Xfce
 
-This script installs a Xfce 4.18 desktop environment with Arc and Matcha Gtk themes on FreeBSD 14.x
+This script installs a Xfce 4.20 desktop environment with Arc and Matcha Gtk themes on FreeBSD 15.x
 
 Display drivers: Only the current nvidia FreeBSD (X64) and VMware display drivers are supported. When VMware is used, the screen size variable must be set to your needs.
 Default: 2560x1440
 
-Applications: Audacious, Catfish,  Chromium, doas, Glances, GNOME Archive manager, Firefox, Gimp, htop, KeePassXC, LibreOffice, lynis, mpv, neofetch, OctoPkg, Ristretto, rkhunter, Shotweel, sysinfo, Thunderbird, VIM, VLC.
+Applications: Audacious, Catfish,  Chromium, doas, Glances, GNOME Archive manager, Firefox, Gimp, htop, KeePassXC, LibreOffice, lynis, mpv, neofetch, OctoPkg, Ristretto, Shotweel, sysinfo, Thunderbird, VIM, VLC.
 
 
 
@@ -15,7 +15,7 @@ It is recommended that you start with a clean installation of FreeBSD 14.04.04.0
 
 ### Prerequisites
 
-- Installation of FreeBSD 14.0-RELEASE-amd64
+- Installation of FreeBSD 15.0-RELEASE-amd64
 - Display card: nvidea video card (550.xx series display driver) or installation on VMWare
 
 ### Installing
