@@ -55,6 +55,7 @@ This project is licensed under the BSD 3 License - See ``LICENSE`` for more info
 
 ## Change notes
 
+- 2026-04-29: Replacing dialog with bsddialog
 - 2022-07-23: New version of the freebsd- xfce-desktop install script using [dialog](https://www.freebsd.org/cgi/man.cgi?query=dialog&amp;sektion=1) (v2.0)
 - 2021-09-21: Initial release of the freebsd-xfce-desktop install script (v1.0)
 
